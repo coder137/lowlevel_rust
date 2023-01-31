@@ -1,10 +1,14 @@
-- [Getting started](#getting-started)
+- [Minimal Blinky](#minimal-blinky)
   - [Links](#links)
   - [Pre-requisites](#pre-requisites)
   - [Build](#build)
   - [Running the code](#running-the-code)
 
-# Getting started
+# Minimal Blinky
+
+This code has been tested on
+
+- B-L475-IOT01A board (STM32L475VGT6 ARM Cortex M4 CPU with FPU)
 
 ## Links
 
@@ -14,16 +18,14 @@
 
 ## Pre-requisites
 
-- CMake (v3.16)
 - arm-none-eabi-gcc (v11.2)
-- Ninja
 - Rust
 
 ## Build
 
 - `rustup default stable`
 - `rustup target add <your_target>`
-  - See **.cargo/config.toml** file
+  - See **.cargo/config.toml** file to install the correct target
 - `cargo install cargo-binutils`
 
 ## Running the code
