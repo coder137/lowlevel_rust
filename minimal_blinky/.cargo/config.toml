@@ -18,7 +18,7 @@ rustflags = [
   # "-C", "link-arg=-Tgcc_arm.ld",
 
   # Generate a .map file
-  # "-C", "link-args=-Map=minimal_baremetal.map",
+  # "-C", "link-args=-Map=minimal_blinky.map",
 
   # if you run into problems with LLD switch to the GNU linker by commenting out
   # this line
@@ -29,7 +29,7 @@ rustflags = [
   # uncommenting the three lines below
   "-C", "linker=arm-none-eabi-gcc",
   "-C", "link-arg=-Wl,-Tgcc_arm.ld",
-  "-C", "link-arg=-Wl,-Map,minimal_baremetal.map",
+  "-C", "link-arg=-Wl,-Map,minimal_blinky.map",
   "-C", "link-arg=-nostartfiles",
 ]
 
