@@ -31,6 +31,7 @@ fn c_library_build() {
     println!("cargo:rerun-if-changed={}/CMakeLists.txt", C_FOLDER);
     println!("cargo:rerun-if-changed={}", C_BUILD_FOLDER);
 
+    // CMake generate
     let c_lib_build = Command::new(CMAKE)
         .args(&["-S", C_FOLDER, "-B", C_BUILD_FOLDER, "-G", "Ninja"])
         .output()
@@ -41,13 +42,10 @@ fn c_library_build() {
             String::from_utf8(c_lib_build.stdout).unwrap()
         );
     } else {
-        println!(
-            "cargo:warning={:?}",
-            String::from_utf8(c_lib_build.stderr).unwrap()
-        );
+        panic!("{}", String::from_utf8(c_lib_build.stderr).unwrap())
     }
 
-    // Compile the library
+    // CMake build
     let c_lib_build = Command::new(CMAKE)
         .args(&["--build", C_BUILD_FOLDER])
         .output()
@@ -58,13 +56,10 @@ fn c_library_build() {
             String::from_utf8(c_lib_build.stdout).unwrap()
         );
     } else {
-        println!(
-            "cargo:warning={:?}",
-            String::from_utf8(c_lib_build.stderr).unwrap()
-        );
+        panic!("{}", String::from_utf8(c_lib_build.stderr).unwrap())
     }
 
-    // This is where the library is installed
+    // C lib link to rust executable
     println!("cargo:rustc-link-search=all={}", C_BUILD_FOLDER);
     for lib in C_LIBRARIES.iter() {
         println!("cargo:rustc-link-lib=static={}", lib);
