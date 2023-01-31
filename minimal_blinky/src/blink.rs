@@ -1,3 +1,5 @@
+use core::arch::asm;
+
 #[allow(non_snake_case)]
 #[repr(C)]
 struct RCC_TypeDef {
@@ -58,14 +60,12 @@ struct GPIO_TypeDef {
     pub ASCR: u32,
 }
 
-extern "C" {
-    pub fn c_asm_nop();
-}
-
 pub fn _spin_delay(delay: u32) {
     let mut mdelay = delay;
     while mdelay != 0 {
-        unsafe { c_asm_nop() };
+        unsafe {
+            asm!("nop");
+        }
         mdelay -= 1;
     }
 }
