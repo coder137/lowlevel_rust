@@ -1,0 +1,49 @@
+name: Rust - all OS CI/CD
+# Projects that are supported on ubuntu, windows and macos are added here
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  all_os:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install ARM GCC
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: "11.2-2022.02"
+
+      - name: Install packages
+        run: |
+          rustup component add llvm-tools-preview
+          rustup target add thumbv7em-none-eabihf
+          cargo install cbindgen
+          cargo install cargo-binutils
+
+      - name: Environment info
+        run: |
+          cargo --version
+          rustup --version
+          rustc --version
+          rustup default
+          arm-none-eabi-gcc -v
+          arm-none-eabi-ld -v
+
+      - name: Minimal blinky
+        working-directory: ${{github.workspace}}/minimal_blinky
+        run: |
+          cargo build
+          cargo size
+          cargo build --release
+          cargo size --release
