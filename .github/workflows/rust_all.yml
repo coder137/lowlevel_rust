@@ -26,6 +26,7 @@ jobs:
 
       - name: Install packages
         run: |
+          rustup component add llvm-tools-preview
           rustup target add thumbv7em-none-eabihf
           cargo install cbindgen
           cargo install cargo-binutils
