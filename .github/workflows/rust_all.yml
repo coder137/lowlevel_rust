@@ -19,18 +19,25 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Environment info
-        run: |
-          cargo --version
-          rustup --version
-          rustc --version
-          rustup default
+      - name: Install ARM GCC
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: "11.2-2022.02"
 
       - name: Install packages
         run: |
           rustup target add thumbv7em-none-eabihf
           cargo install cbindgen
           cargo install cargo-binutils
+
+      - name: Environment info
+        run: |
+          cargo --version
+          rustup --version
+          rustc --version
+          rustup default
+          arm-none-eabi-gcc -v
+          arm-none-eabi-ld -v
 
       - name: Minimal blinky
         working-directory: ${{github.workspace}}/minimal_blinky
