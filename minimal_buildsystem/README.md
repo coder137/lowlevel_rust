@@ -1,10 +1,10 @@
-- [Minimal Blinky](#minimal-blinky)
+- [Minimal Buildsystem](#minimal-buildsystem)
   - [Links](#links)
   - [Pre-requisites](#pre-requisites)
   - [Build](#build)
   - [Running the code](#running-the-code)
 
-# Minimal Blinky
+# Minimal Buildsystem
 
 This code has been tested on
 

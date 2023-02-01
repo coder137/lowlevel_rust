@@ -2,7 +2,7 @@
   "configurations": [
     {
       "cwd": "${workspaceFolder}",
-      "executable": "target/thumbv7em-none-eabihf/debug/minimal_blinky",
+      "executable": "target/thumbv7em-none-eabihf/debug/minimal_buildsystem",
       "configFiles": [
         "stm32l4discovery.cfg"
       ],
@@ -17,7 +17,7 @@
     },
     {
       "cwd": "${workspaceFolder}",
-      "executable": "target/thumbv7em-none-eabihf/release/minimal_blinky",
+      "executable": "target/thumbv7em-none-eabihf/release/minimal_buildsystem",
       "configFiles": [
         "stm32l4discovery.cfg"
       ],

@@ -1,5 +1,5 @@
 [package]
-name = "minimal_blinky"
+name = "minimal_buildsystem"
 version = "0.1.0"
 authors = ["Niket Naidu <coder137@gmail.com>"]
 edition = "2018"
