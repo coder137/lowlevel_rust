@@ -1,0 +1,41 @@
+name: Rust - all OS CI/CD
+# Projects that are supported on ubuntu, windows and macos are added here
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  all_os:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Environment info
+        run: |
+          cargo --version
+          rustup --version
+          rustc --version
+          rustup default
+
+      - name: Install packages
+        run: |
+          rustup target add thumbv7em-none-eabihf
+          cargo install cbindgen
+          cargo install cargo-binutils
+
+      - name: Minimal blinky
+        working-directory: ${{github.workspace}}/minimal_blinky
+        run: |
+          cargo build
+          cargo size
+          cargo build --release
+          cargo size --release
