@@ -3,6 +3,7 @@
   - [Pre-requisites](#pre-requisites)
   - [Build system for Rust](#build-system-for-rust)
     - [\[build\_debug | build\_release\]](#build_debug--build_release)
+    - [test](#test)
     - [flash\_debug](#flash_debug)
     - [\[ci\_debug | ci\_release\]](#ci_debug--ci_release)
 
@@ -43,9 +44,16 @@ cargo make [command]
 
 ### [build_debug | build_release]
 
-Makes a debug or release build of the project using the default target microcontroller architecture
+Makes a debug or release build of the project using the microcontroller target
 
 See `.cargo/config.toml`, **build.target** field
+
+### test
+
+Make a build of the project using the default system host toolchain and target
+
+Run `rustup default` to see your system host toolchain
+Run `rustup target list` to see the system host target installed for your toolchain
 
 ### flash_debug
 
@@ -57,6 +65,7 @@ Single command that does the following in order
 
 - Build on-target code [debug | release]
 - Size of on-target code
+- Executes unit-tests and mocks using an off-target build
 - Convert `*.elf` to `*.bin`
 - Convert `*.elf` to `*.hex`
 - Dump `*.elf` symbols to `*.lst`
