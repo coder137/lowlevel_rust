@@ -28,8 +28,9 @@ jobs:
         run: |
           rustup component add llvm-tools-preview
           rustup target add thumbv7em-none-eabihf
-          cargo install cbindgen
           cargo install cargo-binutils
+          cargo install cargo-make
+          cargo install cbindgen
 
       - name: Environment info
         run: |
@@ -47,3 +48,10 @@ jobs:
           cargo size
           cargo build --release
           cargo size --release
+
+      - name: Minimal buildsystem
+        working-directory: ${{github.workspace}}/minimal_buildsystem
+        run: |
+          cargo make ci_debug
+          cargo make ci_release
+          cargo doc
