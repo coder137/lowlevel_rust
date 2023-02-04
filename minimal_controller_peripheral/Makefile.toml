@@ -1,0 +1,83 @@
+# Duckscript is used here to convert \ to / for binary output path
+[tasks.build_debug]
+script_runner = "@duckscript"
+script = '''
+output = set ${CARGO_MAKE_CRATE_CUSTOM_TRIPLE_TARGET_DIRECTORY}/debug/${CARGO_MAKE_CRATE_NAME}
+output = replace ${output} \\ /
+set_env OUTPUT ${output}
+exec cargo build
+'''
+
+# Duckscript is used here to convert \ to / for binary output path
+[tasks.build_release]
+script_runner = "@duckscript"
+script = '''
+output = set ${CARGO_MAKE_CRATE_CUSTOM_TRIPLE_TARGET_DIRECTORY}/release/${CARGO_MAKE_CRATE_NAME}
+output = replace ${output} \\ /
+set_env OUTPUT ${output}
+exec cargo build --release
+'''
+
+[tasks.test]
+command = "cargo"
+args = ["test", "--target", "${CARGO_MAKE_RUST_TARGET_TRIPLE}"]
+
+[tasks.flash_debug]
+script_runner = "@shell"
+script = '''
+openocd -f board/stm32l4discovery.cfg -c "program ${OUTPUT} verify reset exit"
+'''
+dependencies = ["build_debug"]
+
+[tasks.ci_debug]
+dependencies = [
+    "build_debug",
+    "test",
+    "objcopy_to_binary",
+    "objcopy_to_hex",
+    "objdump",
+    "size",
+]
+
+[tasks.ci_release]
+dependencies = [
+    "build_release",
+    "test",
+    "objcopy_to_binary",
+    "objcopy_to_hex",
+    "objdump",
+    "size",
+]
+
+# Private Tasks
+
+# Requires 
+# arm-none-eabi-size executable (ARM GCC toolchain)
+# OUTPUT env variable (Set by build_*)
+[tasks.size]
+private = true
+command = "arm-none-eabi-size"
+args = ["${OUTPUT}"]
+
+# arm-none-eabi-objcopy executable (ARM GCC toolchain)
+# OUTPUT env variable (Set by build_*)
+[tasks.objcopy_to_binary]
+private = true
+command = "arm-none-eabi-objcopy"
+args = ["-O", "binary", "${OUTPUT}", "${OUTPUT}.bin"]
+
+# arm-none-eabi-objcopy executable (ARM GCC toolchain)
+# OUTPUT env variable (Set by build_*)
+[tasks.objcopy_to_hex]
+private = true
+command = "arm-none-eabi-objcopy"
+args = ["-O", "ihex", "${OUTPUT}", "${OUTPUT}.hex"]
+
+# arm-none-eabi-objdump executable (ARM GCC toolchain)
+# OUTPUT env variable (Set by build_*)
+[tasks.objdump]
+private = true
+script_runner = "@shell"
+script = '''
+arm-none-eabi-objdump --source --all-headers --demangle --line-numbers --wide ${OUTPUT} > ${OUTPUT}.lst
+'''
