@@ -13,7 +13,7 @@ use std::path::PathBuf;
 
 fn reference() {
     let out: &PathBuf = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    println!("cargo:warning={:?}", out.display());
+    println!("{}", out.display());
 }
 
 fn linker_script() {
