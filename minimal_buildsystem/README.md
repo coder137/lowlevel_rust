@@ -1,8 +1,10 @@
 - [Minimal Buildsystem](#minimal-buildsystem)
   - [Links](#links)
   - [Pre-requisites](#pre-requisites)
-  - [Build](#build)
-  - [Running the code](#running-the-code)
+  - [Build system for Rust](#build-system-for-rust)
+    - [\[build\_debug | build\_release\]](#build_debug--build_release)
+    - [flash\_debug](#flash_debug)
+    - [\[ci\_debug | ci\_release\]](#ci_debug--ci_release)
 
 # Minimal Buildsystem
 
@@ -18,19 +20,43 @@ This code has been tested on
 
 ## Pre-requisites
 
-- arm-none-eabi-gcc (v11.2)
-- Rust
+- Pre-requisites from `minimal_blinky`
+- cargo install cargo-make
 
-## Build
+## Build system for Rust
 
-- `rustup default stable`
-- `rustup target add <your_target>`
-  - See **.cargo/config.toml** file to install the correct target
-- `cargo install cargo-binutils`
+Cargo make is used to build, run and deploy various aspects of this project.
+This is because we need configurations for
 
-## Running the code
+- Building microcontroller (on-target) code for different supported architectures and toolchains.
+  - Pre-processing (.c to .rs conversion, code generation)
+  - Building (convert to .elf)
+  - Post-processing (.elf size, .bin and .hex generation, flashing after build, CI run)
+- Unit-testing functionality (off-target) using host toolchain
+- Documentation generation
 
-- `cargo build`
-- Run the code on the target board using the **.vscode/launch.json** configurations
-  - These can also be manually run on the target using OpenOCD
-  - Requires the **cortex-debug** vscode extension
+Commands can be run using 
+
+```bash
+cargo make [command]
+```
+
+### [build_debug | build_release]
+
+Makes a debug or release build of the project using the default target microcontroller architecture
+
+See `.cargo/config.toml`, **build.target** field
+
+### flash_debug
+
+Uses openocd to flash your generated `/debug/*.elf` file to the STM32 microcontroller
+
+### [ci_debug | ci_release]
+
+Single command that does the following in order
+
+- Build on-target code [debug | release]
+- Size of on-target code
+- Convert `*.elf` to `*.bin`
+- Convert `*.elf` to `*.hex`
+- Dump `*.elf` symbols to `*.lst`
