@@ -6,6 +6,7 @@
     - [test](#test)
     - [flash\_debug](#flash_debug)
     - [\[ci\_debug | ci\_release\]](#ci_debug--ci_release)
+    - [doc](#doc)
 
 # Minimal Buildsystem
 
@@ -69,3 +70,9 @@ Single command that does the following in order
 - Convert `*.elf` to `*.bin`
 - Convert `*.elf` to `*.hex`
 - Dump `*.elf` symbols to `*.lst`
+
+### doc
+
+This is not added to `cargo make`
+
+Invoke cargo doc from the root
