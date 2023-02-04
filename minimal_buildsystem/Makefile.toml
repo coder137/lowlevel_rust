@@ -1,4 +1,4 @@
-# Actions for cargo-make
+# Duckscript is used here to convert \ to / for binary output path
 [tasks.build_debug]
 script_runner = "@duckscript"
 script = '''
@@ -8,6 +8,7 @@ set_env OUTPUT ${output}
 exec cargo build
 '''
 
+# Duckscript is used here to convert \ to / for binary output path
 [tasks.build_release]
 script_runner = "@duckscript"
 script = '''
@@ -18,9 +19,9 @@ exec cargo build --release
 '''
 
 [tasks.flash_debug]
-script_runner = "@duckscript"
+script_runner = "@shell"
 script = '''
-exec openocd -f board/stm32l4discovery.cfg -c "program ${OUTPUT} verify reset exit"
+openocd -f board/stm32l4discovery.cfg -c "program ${OUTPUT} verify reset exit"
 '''
 dependencies = ["build_debug"]
 
