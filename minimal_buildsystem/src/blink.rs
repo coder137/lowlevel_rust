@@ -1,3 +1,5 @@
+#![cfg(not(test))]
+
 use core::arch::asm;
 
 #[allow(non_snake_case)]

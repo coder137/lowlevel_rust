@@ -18,6 +18,10 @@ set_env OUTPUT ${output}
 exec cargo build --release
 '''
 
+[tasks.test]
+command = "cargo"
+args = ["test", "--target", "${CARGO_MAKE_RUST_TARGET_TRIPLE}"]
+
 [tasks.flash_debug]
 script_runner = "@shell"
 script = '''
@@ -28,6 +32,7 @@ dependencies = ["build_debug"]
 [tasks.ci_debug]
 dependencies = [
     "build_debug",
+    "test",
     "objcopy_to_binary",
     "objcopy_to_hex",
     "objdump",
@@ -37,6 +42,7 @@ dependencies = [
 [tasks.ci_release]
 dependencies = [
     "build_release",
+    "test",
     "objcopy_to_binary",
     "objcopy_to_hex",
     "objdump",
