@@ -30,7 +30,6 @@ jobs:
           rustup target add thumbv7em-none-eabihf
           cargo install cargo-binutils
           cargo install cargo-make
-          cargo install cbindgen
 
       - name: Environment info
         run: |
