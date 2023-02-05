@@ -1,4 +1,5 @@
 #![cfg(not(test))]
+#![cfg(all(target_arch = "arm", target_os = "none"))]
 #![allow(non_snake_case)]
 
 use core::arch::asm;

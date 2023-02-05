@@ -1,5 +1,3 @@
-#![cfg(not(test))]
-
 use core::panic::PanicInfo;
 
 #[panic_handler]

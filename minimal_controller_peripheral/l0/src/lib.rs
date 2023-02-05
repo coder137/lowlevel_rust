@@ -1,6 +1,7 @@
 // This should only be included for supported target architectures
 #![cfg(not(test))] // No tests allowed
-#![no_std] // No std only
+#![cfg(all(target_arch = "arm", target_os = "none"))] // ARM for microcontrollers allowed
+#![no_std] // No std library, core library only
 
 // Other macros for generated controller.rs
 #![allow(non_upper_case_globals)]
