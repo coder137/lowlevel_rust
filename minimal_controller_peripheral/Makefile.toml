@@ -1,12 +1,12 @@
-[env]
-# NOTE, This is important for cargo-make to work with workspaces
-CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+[config]
+default_to_workspace = false
 
 # Duckscript is used here to convert \ to / for binary output path
 [tasks.build_debug]
 script_runner = "@duckscript"
 script = '''
-output = set ${CARGO_MAKE_CRATE_CUSTOM_TRIPLE_TARGET_DIRECTORY}/debug/${CARGO_MAKE_CRATE_NAME}
+output = set ${CARGO_MAKE_CRATE_CUSTOM_TRIPLE_TARGET_DIRECTORY}/debug/application
+echo OUTPUT: ${output}
 output = replace ${output} \\ /
 set_env OUTPUT ${output}
 exec cargo build
@@ -16,7 +16,7 @@ exec cargo build
 [tasks.build_release]
 script_runner = "@duckscript"
 script = '''
-output = set ${CARGO_MAKE_CRATE_CUSTOM_TRIPLE_TARGET_DIRECTORY}/release/${CARGO_MAKE_CRATE_NAME}
+output = set ${CARGO_MAKE_CRATE_CUSTOM_TRIPLE_TARGET_DIRECTORY}/release/application
 output = replace ${output} \\ /
 set_env OUTPUT ${output}
 exec cargo build --release
