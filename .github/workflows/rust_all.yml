@@ -30,7 +30,6 @@ jobs:
           rustup target add thumbv7em-none-eabihf
           cargo install cargo-binutils
           cargo install cargo-make
-          cargo install cbindgen
 
       - name: Environment info
         run: |
@@ -41,7 +40,7 @@ jobs:
           arm-none-eabi-gcc -v
           arm-none-eabi-ld -v
 
-      - name: Minimal blinky
+      - name: Minimal Blinky
         working-directory: ${{github.workspace}}/minimal_blinky
         run: |
           cargo build
@@ -49,8 +48,15 @@ jobs:
           cargo build --release
           cargo size --release
 
-      - name: Minimal buildsystem
+      - name: Minimal Buildsystem
         working-directory: ${{github.workspace}}/minimal_buildsystem
+        run: |
+          cargo make ci_debug
+          cargo make ci_release
+          cargo doc
+
+      - name: Minimal Controller Peripheral
+        working-directory: ${{github.workspace}}/minimal_controller_peripheral
         run: |
           cargo make ci_debug
           cargo make ci_release
