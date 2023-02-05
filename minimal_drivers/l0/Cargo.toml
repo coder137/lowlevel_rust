@@ -1,0 +1,13 @@
+[package]
+name = "l0"
+version = "0.1.0"
+authors = ["Niket Naidu <coder137@gmail.com>"]
+edition = "2021"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[build-dependencies]
+bindgen = "0.63.0"
