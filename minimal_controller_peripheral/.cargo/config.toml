@@ -17,7 +17,7 @@ rustflags = [
   # "-C", "link-arg=-Tgcc_arm.ld",
 
   # Generate a .map file
-  # "-C", "link-args=-Map=minimal_controller_peripheral.map",
+  # "-C", "link-args=-Map=application.map",
 
   # if you run into problems with LLD switch to the GNU linker by commenting out
   # this line
@@ -28,7 +28,7 @@ rustflags = [
   # uncommenting the three lines below
   "-C", "linker=arm-none-eabi-gcc",
   "-C", "link-arg=-Wl,-Tgcc_arm.ld",
-  "-C", "link-arg=-Wl,-Map,minimal_controller_peripheral.map",
+  "-C", "link-arg=-Wl,-Map,application.map",
   "-C", "link-arg=-nostartfiles",
 ]
 
