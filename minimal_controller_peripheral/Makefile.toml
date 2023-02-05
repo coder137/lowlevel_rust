@@ -1,3 +1,7 @@
+[env]
+# NOTE, This is important for cargo-make to work with workspaces
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+
 # Duckscript is used here to convert \ to / for binary output path
 [tasks.build_debug]
 script_runner = "@duckscript"
