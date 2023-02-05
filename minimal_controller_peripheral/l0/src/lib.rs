@@ -7,6 +7,9 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+mod entry_point;
+mod rust_entry_point;
+
 // Generated controller bindings
 mod controller;
 pub use controller::*;

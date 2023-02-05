@@ -1,9 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(not(test), no_main)]
 
-mod entry_point;
-mod rust_entry_point;
-
 mod blink;
 
 #[cfg(not(test))]
