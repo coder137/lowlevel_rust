@@ -9,12 +9,13 @@ mod blink;
 #[cfg(not(test))]
 #[no_mangle]
 fn main() -> ! {
+    const TIME: u32 = 100_000;
     blink::blink_init();
     blink::blink_set();
     loop {
-        blink::_spin_delay(100_000);
+        blink::_spin_delay(TIME);
         blink::blink_reset();
-        blink::_spin_delay(100_000);
+        blink::_spin_delay(TIME);
         blink::blink_set();
     }
 }
