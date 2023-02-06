@@ -160,48 +160,48 @@ impl GPIO {
 
     /// Sets the mode according to the pin value
     fn set_moder(&mut self) {
-        let mut mode = unsafe { read_volatile(&mut self.port.MODER) };
+        let mut mode = unsafe { read_volatile(&self.port.MODER) };
         mode &= !(0x3 << self.pin.to_num() * 2); // clear mode register
         mode |= self.mode.to_num() << self.pin.to_num() * 2;
         unsafe { write_volatile(&mut self.port.MODER, mode) };
     }
 
     fn set_otyper(&mut self) {
-        let mut typ = unsafe { read_volatile(&mut self.port.OTYPER) };
+        let mut typ = unsafe { read_volatile(&self.port.OTYPER) };
         typ &= !(0x1 << self.pin.to_num()); // clear type register
         typ |= self.typ.to_num() << self.pin.to_num();
         unsafe { write_volatile(&mut self.port.OTYPER, typ) };
     }
 
     fn set_ospeedr(&mut self) {
-        let mut speed = unsafe { read_volatile(&mut self.port.OSPEEDR) };
+        let mut speed = unsafe { read_volatile(&self.port.OSPEEDR) };
         speed &= !(0x3 << self.pin.to_num() * 2); // clear speed register
         speed |= self.speed.to_num() << self.pin.to_num() * 2;
         unsafe { write_volatile(&mut self.port.OSPEEDR, speed) };
     }
 
     fn set_pupdr(&mut self) {
-        let mut pu_pd = unsafe { read_volatile(&mut self.port.PUPDR) };
+        let mut pu_pd = unsafe { read_volatile(&self.port.PUPDR) };
         pu_pd &= !(0x3 << self.pin.to_num() * 2);
         pu_pd |= self.pull.to_num() << self.pin.to_num() * 2;
         unsafe { write_volatile(&mut self.port.PUPDR, pu_pd) };
     }
 
     fn set_odr(&mut self, value: GpioValue) {
-        let mut odr = unsafe { read_volatile(&mut self.port.ODR) };
+        let mut odr = unsafe { read_volatile(&self.port.ODR) };
         odr &= !(0x1 << self.pin.to_num());
         odr |= value.to_num() << self.pin.to_num();
         unsafe { write_volatile(&mut self.port.ODR, odr) };
     }
 
     fn set_bsrr(&mut self) {
-        let mut bsrr = unsafe { read_volatile(&mut self.port.BSRR) };
+        let mut bsrr = unsafe { read_volatile(&self.port.BSRR) };
         bsrr |= 1 << self.pin.to_num();
         unsafe { write_volatile(&mut self.port.BSRR, bsrr) };
     }
 
     fn set_brr(&mut self) {
-        let mut brr = unsafe { read_volatile(&mut self.port.BRR) };
+        let mut brr = unsafe { read_volatile(&self.port.BRR) };
         brr |= 1 << self.pin.to_num();
         unsafe { write_volatile(&mut self.port.BRR, brr) };
     }
