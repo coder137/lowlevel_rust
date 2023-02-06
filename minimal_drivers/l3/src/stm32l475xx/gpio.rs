@@ -210,19 +210,19 @@ impl GPIO {
 impl GpioOut for GPIO {
     fn write(&mut self, value: GpioValue) {
         match value {
-            GpioValue::Off => self.set_brr(),
-            GpioValue::On => self.set_bsrr(),
+            GpioValue::Low => self.set_brr(),
+            GpioValue::High => self.set_bsrr(),
         }
     }
 }
 
 impl GpioIn for GPIO {
-    fn read(&mut self) -> GpioValue {
-        let idr = unsafe { read_volatile(&mut self.port.IDR) };
+    fn read(&self) -> GpioValue {
+        let idr = unsafe { read_volatile(&self.port.IDR) };
         let value = (idr >> self.pin.to_num()) & 0x01;
         let value = match value {
-            0x0 => GpioValue::Off,
-            0x1 => GpioValue::On,
+            0x0 => GpioValue::Low,
+            0x1 => GpioValue::High,
             _ => unreachable!(),
         };
         value

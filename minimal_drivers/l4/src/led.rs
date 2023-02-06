@@ -1,7 +1,7 @@
 use l3::GpioOut;
 
 pub struct Led<'a> {
-    pub gpio: &'a mut dyn GpioOut,
+    gpio: &'a mut dyn GpioOut,
 }
 
 impl<'a> Led<'a> {

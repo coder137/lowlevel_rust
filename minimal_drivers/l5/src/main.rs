@@ -36,14 +36,12 @@ fn main() -> ! {
 
     // Created led module
     let mut led = Led::new(&mut gpio_out_at_pin5);
+    let button = Button::new(&mut gpio_in_at_pin13, GpioValue::High);
     loop {
-        match gpio_in_at_pin13.read() {
-            GpioValue::Off => {
-                TIME = 100_000;
-            }
-            GpioValue::On => {
-                TIME = 20_000;
-            }
+        if button.pressed() {
+            TIME = 20_000;
+        } else {
+            TIME = 100_000;
         }
 
         led.on();
