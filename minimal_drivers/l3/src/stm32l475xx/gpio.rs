@@ -3,7 +3,7 @@
 
 use core::ptr::{read_volatile, write_volatile};
 
-use crate::{EnumToNum, GpioIn, GpioOut, GpioValue, Peripheral, RCC};
+use crate::{EnumToNum, GpioIn, GpioOut, GpioValue, Peripheral};
 use l0::{GPIO_TypeDef, GPIOA_BASE, GPIOB_BASE, GPIOC_BASE};
 
 pub enum GpioPin {
