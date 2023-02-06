@@ -23,3 +23,7 @@ pub trait GpioOut {
         self.write(GpioValue::Off);
     }
 }
+
+pub trait GpioIn {
+    fn read(&mut self) -> GpioValue;
+}

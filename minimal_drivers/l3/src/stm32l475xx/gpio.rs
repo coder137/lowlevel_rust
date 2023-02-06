@@ -1,9 +1,10 @@
 #![allow(non_camel_case_types)]
 #![allow(dead_code)]
 
-use crate::{EnumToNum, GpioOut, GpioValue, Peripheral, RCC};
 use core::ptr::{read_volatile, write_volatile};
-use l0::{GPIO_TypeDef, GPIOA_BASE};
+
+use crate::{EnumToNum, GpioIn, GpioOut, GpioValue, Peripheral, RCC};
+use l0::{GPIO_TypeDef, GPIOA_BASE, GPIOB_BASE, GPIOC_BASE};
 
 pub enum GpioPin {
     Num0,
@@ -27,22 +28,22 @@ pub enum GpioPin {
 impl EnumToNum for GpioPin {
     fn to_num(&self) -> u32 {
         match self {
-            GpioPin::Num0 => 0x0,
-            GpioPin::Num1 => 0x1,
-            GpioPin::Num2 => 0x2,
-            GpioPin::Num3 => 0x3,
-            GpioPin::Num4 => 0x4,
-            GpioPin::Num5 => 0x5,
-            GpioPin::Num6 => 0x6,
-            GpioPin::Num7 => 0x7,
-            GpioPin::Num8 => 0x8,
-            GpioPin::Num9 => 0x9,
-            GpioPin::Num10 => 0x10,
-            GpioPin::Num11 => 0x11,
-            GpioPin::Num12 => 0x12,
-            GpioPin::Num13 => 0x13,
-            GpioPin::Num14 => 0x14,
-            GpioPin::Num15 => 0x15,
+            GpioPin::Num0 => 0,
+            GpioPin::Num1 => 1,
+            GpioPin::Num2 => 2,
+            GpioPin::Num3 => 3,
+            GpioPin::Num4 => 4,
+            GpioPin::Num5 => 5,
+            GpioPin::Num6 => 6,
+            GpioPin::Num7 => 7,
+            GpioPin::Num8 => 8,
+            GpioPin::Num9 => 9,
+            GpioPin::Num10 => 10,
+            GpioPin::Num11 => 11,
+            GpioPin::Num12 => 12,
+            GpioPin::Num13 => 13,
+            GpioPin::Num14 => 14,
+            GpioPin::Num15 => 15,
         }
     }
 }
@@ -70,10 +71,29 @@ enum GpioType {
     OpenDrain,
 }
 
+impl EnumToNum for GpioType {
+    fn to_num(&self) -> u32 {
+        match self {
+            GpioType::PushPull => 0x0,
+            GpioType::OpenDrain => 0x1,
+        }
+    }
+}
+
 enum GpioPull {
     NoPullupOrPulldown,
     Pullup,
     Pulldown,
+}
+
+impl EnumToNum for GpioPull {
+    fn to_num(&self) -> u32 {
+        match self {
+            GpioPull::NoPullupOrPulldown => 0x0,
+            GpioPull::Pullup => 0x1,
+            GpioPull::Pulldown => 0x2,
+        }
+    }
 }
 
 enum GpioSpeed {
@@ -81,6 +101,17 @@ enum GpioSpeed {
     MediumSpeed,
     HighSpeed,
     VeryHighSpeed,
+}
+
+impl EnumToNum for GpioSpeed {
+    fn to_num(&self) -> u32 {
+        match self {
+            GpioSpeed::LowSpeed => 0x0,
+            GpioSpeed::MediumSpeed => 0x1,
+            GpioSpeed::HighSpeed => 0x2,
+            GpioSpeed::VeryHighSpeed => 0x3,
+        }
+    }
 }
 
 pub struct GPIO {
@@ -94,12 +125,24 @@ pub struct GPIO {
 }
 
 impl GPIO {
-    // TODO, Make sure a new API is different from the init API
     pub fn configure_as_output(port: &'static mut GPIO_TypeDef, pin: GpioPin) -> Self {
         let mut gpio = Self {
             port,
             pin,
             mode: GpioMode::Output,
+            typ: GpioType::PushPull,
+            pull: GpioPull::NoPullupOrPulldown,
+            speed: GpioSpeed::LowSpeed,
+        };
+        gpio.configure();
+        gpio
+    }
+
+    pub fn configure_as_input(port: &'static mut GPIO_TypeDef, pin: GpioPin) -> Self {
+        let mut gpio = Self {
+            port,
+            pin,
+            mode: GpioMode::Input,
             typ: GpioType::PushPull,
             pull: GpioPull::NoPullupOrPulldown,
             speed: GpioSpeed::LowSpeed,
@@ -126,24 +169,21 @@ impl GPIO {
     fn set_otyper(&mut self) {
         let mut typ = unsafe { read_volatile(&mut self.port.OTYPER) };
         typ &= !(0x1 << self.pin.to_num()); // clear type register
-
-        // TODO, Set required value here
+        typ |= self.typ.to_num() << self.pin.to_num();
         unsafe { write_volatile(&mut self.port.OTYPER, typ) };
     }
 
     fn set_ospeedr(&mut self) {
         let mut speed = unsafe { read_volatile(&mut self.port.OSPEEDR) };
         speed &= !(0x3 << self.pin.to_num() * 2); // clear speed register
-
-        // TODO, Set required value here
+        speed |= self.speed.to_num() << self.pin.to_num() * 2;
         unsafe { write_volatile(&mut self.port.OSPEEDR, speed) };
     }
 
     fn set_pupdr(&mut self) {
         let mut pu_pd = unsafe { read_volatile(&mut self.port.PUPDR) };
         pu_pd &= !(0x3 << self.pin.to_num() * 2);
-
-        // TODO, Set required value here
+        pu_pd |= self.pull.to_num() << self.pin.to_num() * 2;
         unsafe { write_volatile(&mut self.port.PUPDR, pu_pd) };
     }
 
@@ -155,15 +195,15 @@ impl GPIO {
     }
 
     fn set_bsrr(&mut self) {
-        let mut bsrr = unsafe { core::ptr::read_volatile(&mut self.port.BSRR) };
+        let mut bsrr = unsafe { read_volatile(&mut self.port.BSRR) };
         bsrr |= 1 << self.pin.to_num();
-        unsafe { core::ptr::write_volatile(&mut self.port.BSRR, bsrr) };
+        unsafe { write_volatile(&mut self.port.BSRR, bsrr) };
     }
 
     fn set_brr(&mut self) {
-        let mut brr = unsafe { core::ptr::read_volatile(&mut self.port.BRR) };
+        let mut brr = unsafe { read_volatile(&mut self.port.BRR) };
         brr |= 1 << self.pin.to_num();
-        unsafe { core::ptr::write_volatile(&mut self.port.BRR, brr) };
+        unsafe { write_volatile(&mut self.port.BRR, brr) };
     }
 }
 
@@ -176,8 +216,27 @@ impl GpioOut for GPIO {
     }
 }
 
+impl GpioIn for GPIO {
+    fn read(&mut self) -> GpioValue {
+        let idr = unsafe { read_volatile(&mut self.port.IDR) };
+        let value = (idr >> self.pin.to_num()) & 0x01;
+        let value = match value {
+            0x0 => GpioValue::Off,
+            0x1 => GpioValue::On,
+            _ => unreachable!(),
+        };
+        value
+    }
+}
+
 // Create established ports here
 pub struct GPIOA_Port;
 impl Peripheral<GPIO_TypeDef, GPIOA_BASE> for GPIOA_Port {}
+
+pub struct GPIOB_Port;
+impl Peripheral<GPIO_TypeDef, GPIOB_BASE> for GPIOB_Port {}
+
+pub struct GPIOC_Port;
+impl Peripheral<GPIO_TypeDef, GPIOC_BASE> for GPIOC_Port {}
 
 // TODO, Do this for other GPIO modules as well
