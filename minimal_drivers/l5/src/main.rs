@@ -24,11 +24,14 @@ pub fn spin_delay(delay: u32) {
 fn main() -> ! {
     const TIME: u32 = 100_000;
 
-    // TODO, This should go instead GPIO
+    // Activate clock control for GPIOA
     let mut rcc = RCC::new(RCC_Port::get());
     rcc.set_ahb2enr(RCC_AHB2ENR::GPIOAEN);
 
+    // Configure GPIOA port and Pin 5 as output
     let mut gpio = GPIO::configure_as_output(GPIOA_Port::get(), GpioPin::Num5);
+
+    // Created led module
     let mut led = Led::new(&mut gpio);
     loop {
         led.on();
