@@ -9,3 +9,5 @@ readme = "README.md"
 
 [dependencies]
 l0 = { path = "../l0" }
+l3 = { path = "../l3" }
+l4 = { path = "../l4" }
