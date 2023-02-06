@@ -38,4 +38,15 @@ This code has been tested on
 
 ## GPIO
 
+- Module
+  - Functionality
+- Port
+  - Registers
+- Pin
+
+---
+
+- [GPIO Traits](https://github.com/mbr/gpio-rs)
+
+
 ## UART
