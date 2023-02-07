@@ -74,7 +74,7 @@ impl EnumToNum for GpioSpeed {
     }
 }
 
-struct GPIO<const B: u32> {
+struct GPIORegister<const B: u32> {
     pin: u32,
     mode: GpioMode,
     typ: GpioType,
@@ -82,9 +82,9 @@ struct GPIO<const B: u32> {
     speed: GpioSpeed,
 }
 
-impl<const B: u32> Port<GPIO_TypeDef, B> for GPIO<B> {}
+impl<const B: u32> Port<GPIO_TypeDef, B> for GPIORegister<B> {}
 
-impl<const B: u32> GPIO<B> {
+impl<const B: u32> GPIORegister<B> {
     pub fn configure(&mut self) {
         self.set_moder();
         self.set_otyper();
@@ -134,7 +134,7 @@ impl<const B: u32> GPIO<B> {
     }
 }
 
-impl<const B: u32> GpioOut for GPIO<B> {
+impl<const B: u32> GpioOut for GPIORegister<B> {
     fn write(&mut self, value: GpioValue) {
         match value {
             GpioValue::Low => self.set_brr(),
@@ -143,7 +143,7 @@ impl<const B: u32> GpioOut for GPIO<B> {
     }
 }
 
-impl<const B: u32> GpioIn for GPIO<B> {
+impl<const B: u32> GpioIn for GPIORegister<B> {
     fn read(&self) -> GpioValue {
         let idr = unsafe { read_volatile(&self.get_port().IDR) };
         let value = (idr >> self.pin) & 0x01;
@@ -160,7 +160,7 @@ pub struct GPIOPort<const B: u32>;
 
 impl<const B: u32> GPIOPort<B> {
     pub fn configure_as_output(&self, pin: u32) -> impl GpioOut {
-        let mut gpio = GPIO::<B> {
+        let mut gpio = GPIORegister::<B> {
             pin,
             mode: GpioMode::Output,
             typ: GpioType::PushPull,
@@ -172,7 +172,7 @@ impl<const B: u32> GPIOPort<B> {
     }
 
     pub fn configure_as_input(&self, pin: u32) -> impl GpioIn {
-        let mut gpio = GPIO::<B> {
+        let mut gpio = GPIORegister::<B> {
             pin,
             mode: GpioMode::Input,
             typ: GpioType::PushPull,
