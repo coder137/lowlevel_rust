@@ -23,7 +23,7 @@ fn main() -> ! {
     use l3::*;
     use l4::*;
 
-    // Activate clock control for GPIOA
+    // Activate clock control for GPIOA and GPIOC
     let mut rcc_port = get_peripheral!(RCC_PERIPHERAL);
     rcc_port.set_ahb2enr(RCC_AHB2ENR::GPIOAEN);
     rcc_port.set_ahb2enr(RCC_AHB2ENR::GPIOCEN);
