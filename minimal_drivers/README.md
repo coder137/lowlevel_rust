@@ -58,7 +58,7 @@ graph BT;
         IDR
         ODR
         subgraph Pin
-          1-15
+          0-15
         end
       end
     end
