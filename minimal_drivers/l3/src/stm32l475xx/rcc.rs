@@ -3,7 +3,7 @@ use core::ptr::{read_volatile, write_volatile};
 
 use l0::{RCC_TypeDef, RCC_BASE};
 
-use crate::{EnumToNum, Peripheral};
+use crate::{EnumToNum, Port, Singleton};
 
 pub enum RCC_AHB2ENR {
     GPIOAEN,
@@ -33,31 +33,26 @@ impl EnumToNum for RCC_AHB2ENR {
     }
 }
 
-pub struct RCC {
-    port: &'static mut RCC_TypeDef,
-}
+pub struct RCC;
 
 impl RCC {
-    pub fn new(port: &'static mut RCC_TypeDef) -> Self {
-        Self { port }
-    }
-
     pub fn set_ahb2enr(&mut self, ahb2: RCC_AHB2ENR) {
-        let mut ahb2enr = unsafe { read_volatile(&mut self.port.AHB2ENR) };
+        let mut ahb2enr = unsafe { read_volatile(&mut self.get_port().AHB2ENR) };
         ahb2enr |= 1 << ahb2.to_num();
         unsafe {
-            write_volatile(&mut self.port.AHB2ENR, ahb2enr);
+            write_volatile(&mut self.get_port().AHB2ENR, ahb2enr);
         }
     }
 
     pub fn reset_ahb2enr(&mut self, ahb2: RCC_AHB2ENR) {
-        let mut ahb2enr = unsafe { read_volatile(&mut self.port.AHB2ENR) };
+        let mut ahb2enr = unsafe { read_volatile(&mut self.get_port().AHB2ENR) };
         ahb2enr &= !(1 << ahb2.to_num());
-        unsafe { write_volatile(&mut self.port.AHB2ENR, ahb2enr) };
+        unsafe { write_volatile(&mut self.get_port().AHB2ENR, ahb2enr) };
     }
 }
 
+impl Port<RCC_TypeDef, RCC_BASE> for RCC {}
+
 // Create established ports here
 
-pub struct RCC_Port;
-impl Peripheral<RCC_TypeDef, RCC_BASE> for RCC_Port {}
+pub static mut RCC_PERIPHERAL: Singleton<RCC> = Singleton::new(RCC {});

@@ -2,9 +2,6 @@
 #![cfg_attr(not(test), no_main)]
 #![allow(unused_imports)]
 
-use l3::*;
-use l4::*;
-
 #[cfg(not(test))]
 #[cfg(all(target_arch = "arm", target_os = "none"))]
 pub fn spin_delay(delay: u32) {
@@ -23,16 +20,22 @@ pub fn spin_delay(delay: u32) {
 #[cfg(all(target_arch = "arm", target_os = "none"))]
 #[no_mangle]
 fn main() -> ! {
+    use l3::*;
+    use l4::*;
+
     // Activate clock control for GPIOA
-    let mut rcc = RCC::new(RCC_Port::get());
-    rcc.set_ahb2enr(RCC_AHB2ENR::GPIOAEN);
-    rcc.set_ahb2enr(RCC_AHB2ENR::GPIOCEN);
+    let mut rcc_peripheral = get_peripheral!(RCC_PERIPHERAL);
+    rcc_peripheral.set_ahb2enr(RCC_AHB2ENR::GPIOAEN);
+    rcc_peripheral.set_ahb2enr(RCC_AHB2ENR::GPIOCEN);
+
+    let gpioa_peripheral = get_peripheral!(GPIOA_PERIPHERAL);
+    let gpioc_peripheral = get_peripheral!(GPIOC_PERIPHERAL);
 
     // Configure GPIOA port and Pin 5 as output
-    let mut gpio_out_at_pin5 = GPIO::configure_as_output(GPIOA_Port::get(), GpioPin::Num5);
+    let mut gpio_out_at_pin5 = gpioa_peripheral.configure_as_output(5);
 
     // Configure GPIOC port and Pin 13 as input
-    let mut gpio_in_at_pin13 = GPIO::configure_as_input(GPIOC_Port::get(), GpioPin::Num13);
+    let mut gpio_in_at_pin13 = gpioc_peripheral.configure_as_input(13);
 
     // Created led module
     let mut led = Led::new(&mut gpio_out_at_pin5);
