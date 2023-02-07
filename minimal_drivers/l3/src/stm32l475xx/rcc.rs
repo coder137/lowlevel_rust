@@ -36,9 +36,9 @@ impl EnumToNum for RCC_AHB2ENR {
 // TODO, If required make a RCCRegister module
 
 // Put functionality here i.e various valid configurations for your port
-pub struct RCCPort<const B: u32>;
+pub struct RCCPeripheral<const B: u32>;
 
-impl<const B: u32> RCCPort<B> {
+impl<const B: u32> RCCPeripheral<B> {
     pub fn set_ahb2enr(&mut self, ahb2: RCC_AHB2ENR) {
         let mut ahb2enr = unsafe { read_volatile(&mut self.get_port().AHB2ENR) };
         ahb2enr |= 1 << ahb2.to_num();
@@ -54,10 +54,10 @@ impl<const B: u32> RCCPort<B> {
     }
 }
 
-impl<const B: u32> Port<RCC_TypeDef, B> for RCCPort<B> {}
+impl<const B: u32> Port<RCC_TypeDef, B> for RCCPeripheral<B> {}
 
 // Create established ports here
 
-type RCC = RCCPort<RCC_BASE>;
+type RCC = RCCPeripheral<RCC_BASE>;
 
-pub static mut RCC_PERIPHERAL: Singleton<RCC> = Singleton::new(RCC {});
+pub static mut RCC_PORT: Singleton<RCC> = Singleton::new(RCC {});

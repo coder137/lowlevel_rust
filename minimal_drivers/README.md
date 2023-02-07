@@ -49,10 +49,10 @@ This code has been tested on
 
 ```mermaid
 graph BT;
-  subgraph Peripheral
-    GPIO
-    subgraph Port
-      GPIOA-H
+  subgraph Port
+    GPIOA-H
+    subgraph Periphal
+      GPIO
       subgraph Register
         MODER
         IDR

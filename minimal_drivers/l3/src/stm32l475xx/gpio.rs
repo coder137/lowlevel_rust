@@ -156,10 +156,10 @@ impl<const B: u32> GpioIn for GPIORegister<B> {
     }
 }
 
-// Put functionality here i.e various valid configurations for your port
-pub struct GPIOPort<const B: u32>;
+// Put functionality here i.e various valid configurations for your peripheral
+pub struct GPIOPeripheral<const B: u32>;
 
-impl<const B: u32> GPIOPort<B> {
+impl<const B: u32> GPIOPeripheral<B> {
     pub fn configure_as_output(&self, pin: u32) -> impl GpioOut {
         let mut gpio = GPIORegister::<B> {
             pin,
@@ -187,20 +187,20 @@ impl<const B: u32> GPIOPort<B> {
 
 // Create established ports here
 
-type GPIOA = GPIOPort<GPIOA_BASE>;
-type GPIOB = GPIOPort<GPIOB_BASE>;
-type GPIOC = GPIOPort<GPIOC_BASE>;
-type GPIOD = GPIOPort<GPIOD_BASE>;
-type GPIOE = GPIOPort<GPIOE_BASE>;
-type GPIOF = GPIOPort<GPIOF_BASE>;
-type GPIOG = GPIOPort<GPIOG_BASE>;
-type GPIOH = GPIOPort<GPIOH_BASE>;
+type GPIOA = GPIOPeripheral<GPIOA_BASE>;
+type GPIOB = GPIOPeripheral<GPIOB_BASE>;
+type GPIOC = GPIOPeripheral<GPIOC_BASE>;
+type GPIOD = GPIOPeripheral<GPIOD_BASE>;
+type GPIOE = GPIOPeripheral<GPIOE_BASE>;
+type GPIOF = GPIOPeripheral<GPIOF_BASE>;
+type GPIOG = GPIOPeripheral<GPIOG_BASE>;
+type GPIOH = GPIOPeripheral<GPIOH_BASE>;
 
-pub static mut GPIOA_PERIPHERAL: Singleton<GPIOA> = Singleton::new(GPIOA {});
-pub static mut GPIOB_PERIPHERAL: Singleton<GPIOB> = Singleton::new(GPIOB {});
-pub static mut GPIOC_PERIPHERAL: Singleton<GPIOC> = Singleton::new(GPIOC {});
-pub static mut GPIOD_PERIPHERAL: Singleton<GPIOD> = Singleton::new(GPIOD {});
-pub static mut GPIOE_PERIPHERAL: Singleton<GPIOE> = Singleton::new(GPIOE {});
-pub static mut GPIOF_PERIPHERAL: Singleton<GPIOF> = Singleton::new(GPIOF {});
-pub static mut GPIOG_PERIPHERAL: Singleton<GPIOG> = Singleton::new(GPIOG {});
-pub static mut GPIOH_PERIPHERAL: Singleton<GPIOH> = Singleton::new(GPIOH {});
+pub static mut GPIOA_PORT: Singleton<GPIOA> = Singleton::new(GPIOA {});
+pub static mut GPIOB_PORT: Singleton<GPIOB> = Singleton::new(GPIOB {});
+pub static mut GPIOC_PORT: Singleton<GPIOC> = Singleton::new(GPIOC {});
+pub static mut GPIOD_PORT: Singleton<GPIOD> = Singleton::new(GPIOD {});
+pub static mut GPIOE_PORT: Singleton<GPIOE> = Singleton::new(GPIOE {});
+pub static mut GPIOF_PORT: Singleton<GPIOF> = Singleton::new(GPIOF {});
+pub static mut GPIOG_PORT: Singleton<GPIOG> = Singleton::new(GPIOG {});
+pub static mut GPIOH_PORT: Singleton<GPIOH> = Singleton::new(GPIOH {});
