@@ -156,6 +156,7 @@ impl<const B: u32> GpioIn for GPIORegister<B> {
     }
 }
 
+// Put functionality here i.e various valid configurations for your port
 pub struct GPIOPort<const B: u32>;
 
 impl<const B: u32> GPIOPort<B> {

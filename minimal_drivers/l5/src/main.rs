@@ -24,18 +24,18 @@ fn main() -> ! {
     use l4::*;
 
     // Activate clock control for GPIOA
-    let mut rcc_peripheral = get_peripheral!(RCC_PERIPHERAL);
-    rcc_peripheral.set_ahb2enr(RCC_AHB2ENR::GPIOAEN);
-    rcc_peripheral.set_ahb2enr(RCC_AHB2ENR::GPIOCEN);
+    let mut rcc_port = get_peripheral!(RCC_PERIPHERAL);
+    rcc_port.set_ahb2enr(RCC_AHB2ENR::GPIOAEN);
+    rcc_port.set_ahb2enr(RCC_AHB2ENR::GPIOCEN);
 
-    let gpioa_peripheral = get_peripheral!(GPIOA_PERIPHERAL);
-    let gpioc_peripheral = get_peripheral!(GPIOC_PERIPHERAL);
+    let gpioa_port = get_peripheral!(GPIOA_PERIPHERAL);
+    let gpioc_port = get_peripheral!(GPIOC_PERIPHERAL);
 
     // Configure GPIOA port and Pin 5 as output
-    let mut gpio_out_at_pin5 = gpioa_peripheral.configure_as_output(5);
+    let mut gpio_out_at_pin5 = gpioa_port.configure_as_output(5);
 
     // Configure GPIOC port and Pin 13 as input
-    let mut gpio_in_at_pin13 = gpioc_peripheral.configure_as_input(13);
+    let mut gpio_in_at_pin13 = gpioc_port.configure_as_input(13);
 
     // Created led module
     let mut led = Led::new(&mut gpio_out_at_pin5);
