@@ -3,7 +3,6 @@
   - [Microcontrollers layers](#microcontrollers-layers)
   - [Pre-requisites](#pre-requisites)
   - [GPIO](#gpio)
-  - [UART](#uart)
 
 # Minimal Drivers
 
@@ -48,5 +47,20 @@ This code has been tested on
 
 - [GPIO Traits](https://github.com/mbr/gpio-rs)
 
-
-## UART
+```mermaid
+graph BT;
+  subgraph Peripheral
+    GPIO
+    subgraph Port
+      GPIOA-H
+      subgraph Register
+        MODER
+        IDR
+        ODR
+        subgraph Pin
+          1-15
+        end
+      end
+    end
+  end
+```
