@@ -3,6 +3,11 @@
   - [Microcontrollers layers](#microcontrollers-layers)
   - [Pre-requisites](#pre-requisites)
   - [GPIO](#gpio)
+- [Changelog](#changelog)
+  - [L3 Layer - Interfaces](#l3-layer---interfaces)
+  - [L3 Layer - Drivers](#l3-layer---drivers)
+  - [L3 Layer - Miscellaneous](#l3-layer---miscellaneous)
+  - [L4](#l4)
 
 # Minimal Drivers
 
@@ -64,3 +69,31 @@ graph BT;
     end
   end
 ```
+
+# Changelog
+
+## L3 Layer - Interfaces
+
+- GpioIn
+- GpioOut
+- UsartIn
+- UsartOut
+- UsartInOut
+- Port
+  - Generic interface that creates a port using base address and peripheral register layout
+  - In C it would be the equivalent of `GPIO_TypeDef * gpio = (GPIO_TypeDef *)BASE_ADDRESS`
+
+## L3 Layer - Drivers
+
+- RCC
+- GPIO
+
+## L3 Layer - Miscellaneous
+
+- Singleton
+  - Safe access to global ports
+
+## L4 
+
+- Led
+- Button
