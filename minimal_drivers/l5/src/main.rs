@@ -24,12 +24,12 @@ fn main() -> ! {
     use l4::*;
 
     // Activate clock control for GPIOA and GPIOC
-    let mut rcc_peripheral = get_peripheral!(RCC_PORT);
+    let mut rcc_peripheral = RCC_PORT.take();
     rcc_peripheral.set_ahb2enr(RCC_AHB2ENR::GPIOAEN);
     rcc_peripheral.set_ahb2enr(RCC_AHB2ENR::GPIOCEN);
 
-    let gpioa_peripheral = get_peripheral!(GPIOA_PORT);
-    let gpioc_peripheral = get_peripheral!(GPIOC_PORT);
+    let gpioa_peripheral = GPIOA_PORT.take();
+    let gpioc_peripheral = GPIOC_PORT.take();
 
     // Configure GPIOA port and Pin 5 as output
     let mut gpio_out_at_pin5 = gpioa_peripheral.configure_as_output(5);
