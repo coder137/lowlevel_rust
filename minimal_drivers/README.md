@@ -4,6 +4,9 @@
   - [Pre-requisites](#pre-requisites)
   - [GPIO](#gpio)
 - [Changelog](#changelog)
+  - [L2 Layer - Utilities](#l2-layer---utilities)
+    - [Own implementation](#own-implementation)
+    - [Crates.io](#cratesio)
   - [L3 Layer - Interfaces](#l3-layer---interfaces)
   - [L3 Layer - Drivers](#l3-layer---drivers)
   - [L3 Layer - Miscellaneous](#l3-layer---miscellaneous)
@@ -30,6 +33,7 @@ This code has been tested on
   - Linker script
 - L1 RTOS
 - L2 Utility
+  - Bitflags
 - L3 Driver
   - GPIO
   - UART
@@ -71,6 +75,14 @@ graph BT;
 ```
 
 # Changelog
+
+## L2 Layer - Utilities
+
+### Own implementation
+
+### Crates.io
+
+- [Bitflags](https://github.com/bitflags/bitflags)
 
 ## L3 Layer - Interfaces
 

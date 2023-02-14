@@ -1,5 +1,5 @@
 [package]
-name = "l3"
+name = "l2"
 version = "0.1.0"
 authors = ["Niket Naidu <coder137@gmail.com>"]
 edition = "2021"
@@ -9,4 +9,5 @@ readme = "README.md"
 
 [dependencies]
 l0 = { path = "../l0" }
-l2 = { path = "../l2" }
+# Add libraries here
+bitflags = "1.3.2"
