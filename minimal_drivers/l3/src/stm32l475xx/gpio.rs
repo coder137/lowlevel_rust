@@ -8,7 +8,7 @@ use l0::{
     GPIOG_BASE, GPIOH_BASE,
 };
 
-enum GpioMode {
+pub enum GpioMode {
     Input,
     Output,
     AlternateFunction,
@@ -26,7 +26,7 @@ impl EnumToNum for GpioMode {
     }
 }
 
-enum GpioType {
+pub enum GpioType {
     PushPull,
     OpenDrain,
 }
@@ -40,7 +40,7 @@ impl EnumToNum for GpioType {
     }
 }
 
-enum GpioPull {
+pub enum GpioPull {
     NoPullupOrPulldown,
     Pullup,
     Pulldown,
@@ -56,7 +56,7 @@ impl EnumToNum for GpioPull {
     }
 }
 
-enum GpioSpeed {
+pub enum GpioSpeed {
     LowSpeed,
     MediumSpeed,
     HighSpeed,
@@ -74,63 +74,67 @@ impl EnumToNum for GpioSpeed {
     }
 }
 
-struct GPIORegister<const B: u32> {
+pub struct GPIOConfig {
+    moder: GpioMode,
+    otyper: GpioType,
+    pupdr: GpioPull,
+    ospeedr: GpioSpeed,
+}
+
+pub struct GPIORegister<const B: u32> {
     pin: u32,
-    mode: GpioMode,
-    typ: GpioType,
-    pull: GpioPull,
-    speed: GpioSpeed,
 }
 
 impl<const B: u32> Port<GPIO_TypeDef, B> for GPIORegister<B> {}
 
 impl<const B: u32> GPIORegister<B> {
-    pub fn configure(&mut self) {
-        self.set_moder();
-        self.set_otyper();
-        self.set_ospeedr();
-        self.set_pupdr();
+    fn via_config(&mut self, config: &GPIOConfig) {
+        self.set_moder(&config.moder);
+        self.set_otyper(&config.otyper);
+        self.set_pupdr(&config.pupdr);
+        self.set_ospeedr(&config.ospeedr);
     }
 
-    /// Sets the mode according to the pin value
-    fn set_moder(&mut self) {
+    fn set_moder(&mut self, moder: &GpioMode) {
         let mut moder_data = unsafe { read_volatile(&self.get_port().MODER) };
         moder_data &= !(0x3 << self.pin * 2); // clear mode register
-        moder_data |= self.mode.to_num() << self.pin * 2;
+        moder_data |= moder.to_num() << self.pin * 2;
         unsafe { write_volatile(&mut self.get_port().MODER, moder_data) };
     }
 
-    fn set_otyper(&mut self) {
+    fn set_otyper(&mut self, otyper: &GpioType) {
         let mut otyper_data = unsafe { read_volatile(&self.get_port().OTYPER) };
         otyper_data &= !(0x1 << self.pin); // clear type register
-        otyper_data |= self.typ.to_num() << self.pin;
+        otyper_data |= otyper.to_num() << self.pin;
         unsafe { write_volatile(&mut self.get_port().OTYPER, otyper_data) };
     }
 
-    fn set_ospeedr(&mut self) {
+    fn set_ospeedr(&mut self, ospeedr: &GpioSpeed) {
         let mut ospeedr_data = unsafe { read_volatile(&self.get_port().OSPEEDR) };
-        ospeedr_data &= !(0x3 << self.pin * 2); // clear speed register
-        ospeedr_data |= self.speed.to_num() << self.pin * 2;
+        ospeedr_data &= !(0x3 << self.pin * 2); // clear ospeedr register
+        ospeedr_data |= ospeedr.to_num() << self.pin * 2;
         unsafe { write_volatile(&mut self.get_port().OSPEEDR, ospeedr_data) };
     }
 
-    fn set_pupdr(&mut self) {
-        let mut pu_pd = unsafe { read_volatile(&self.get_port().PUPDR) };
-        pu_pd &= !(0x3 << self.pin * 2);
-        pu_pd |= self.pull.to_num() << self.pin * 2;
-        unsafe { write_volatile(&mut self.get_port().PUPDR, pu_pd) };
+    fn set_pupdr(&mut self, pupdr: &GpioPull) {
+        let mut pupdr_data = unsafe { read_volatile(&self.get_port().PUPDR) };
+        pupdr_data &= !(0x3 << self.pin * 2);
+        pupdr_data |= pupdr.to_num() << self.pin * 2;
+        unsafe { write_volatile(&mut self.get_port().PUPDR, pupdr_data) };
     }
 
+    // TODO, Add alternate function selection for USART
+
     fn set_bsrr(&mut self) {
-        let mut bsrr = unsafe { read_volatile(&self.get_port().BSRR) };
-        bsrr |= 1 << self.pin;
-        unsafe { write_volatile(&mut self.get_port().BSRR, bsrr) };
+        let mut bsrr_data = unsafe { read_volatile(&self.get_port().BSRR) };
+        bsrr_data |= 1 << self.pin;
+        unsafe { write_volatile(&mut self.get_port().BSRR, bsrr_data) };
     }
 
     fn set_brr(&mut self) {
-        let mut brr = unsafe { read_volatile(&self.get_port().BRR) };
-        brr |= 1 << self.pin;
-        unsafe { write_volatile(&mut self.get_port().BRR, brr) };
+        let mut brr_data = unsafe { read_volatile(&self.get_port().BRR) };
+        brr_data |= 1 << self.pin;
+        unsafe { write_volatile(&mut self.get_port().BRR, brr_data) };
     }
 }
 
@@ -161,26 +165,28 @@ pub struct GPIOPeripheral<const B: u32>;
 
 impl<const B: u32> GPIOPeripheral<B> {
     pub fn configure_as_output(&self, pin: u32) -> impl GpioOut {
-        let mut gpio = GPIORegister::<B> {
-            pin,
-            mode: GpioMode::Output,
-            typ: GpioType::PushPull,
-            pull: GpioPull::NoPullupOrPulldown,
-            speed: GpioSpeed::LowSpeed,
+        let config = GPIOConfig {
+            moder: GpioMode::Output,
+            otyper: GpioType::PushPull,
+            pupdr: GpioPull::NoPullupOrPulldown,
+            ospeedr: GpioSpeed::LowSpeed,
         };
-        gpio.configure();
-        gpio
+        self.configure(pin, &config)
     }
 
     pub fn configure_as_input(&self, pin: u32) -> impl GpioIn {
-        let mut gpio = GPIORegister::<B> {
-            pin,
-            mode: GpioMode::Input,
-            typ: GpioType::PushPull,
-            pull: GpioPull::NoPullupOrPulldown,
-            speed: GpioSpeed::LowSpeed,
+        let config = GPIOConfig {
+            moder: GpioMode::Input,
+            otyper: GpioType::PushPull,
+            pupdr: GpioPull::NoPullupOrPulldown,
+            ospeedr: GpioSpeed::LowSpeed,
         };
-        gpio.configure();
+        self.configure(pin, &config)
+    }
+
+    pub fn configure(&self, pin: u32, config: &GPIOConfig) -> GPIORegister<B> {
+        let mut gpio = GPIORegister::<B> { pin };
+        gpio.via_config(&config);
         gpio
     }
 }
