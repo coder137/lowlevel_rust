@@ -61,3 +61,10 @@ jobs:
           cargo make ci_debug
           cargo make ci_release
           cargo doc
+
+      - name: Minimal Drivers
+        working-directory: ${{github.workspace}}/minimal_drivers
+        run: |
+          cargo make ci_debug
+          cargo make ci_release
+          cargo doc
