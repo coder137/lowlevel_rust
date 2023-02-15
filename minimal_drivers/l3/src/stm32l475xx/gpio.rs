@@ -2,83 +2,118 @@
 
 use core::ptr::{read_volatile, write_volatile};
 
-use crate::{EnumToNum, GpioIn, GpioOut, GpioValue, Port, Singleton};
+use crate::{EnumToNum, GpioIn, GpioOut, GpioValue, PeripheralConfiguration, Port, Singleton};
 use l0::{
     GPIO_TypeDef, GPIOA_BASE, GPIOB_BASE, GPIOC_BASE, GPIOD_BASE, GPIOE_BASE, GPIOF_BASE,
     GPIOG_BASE, GPIOH_BASE,
 };
 
-pub enum GpioMode {
+pub enum GPIOMode {
     Input,
     Output,
     AlternateFunction,
     AnalogMode,
 }
 
-impl EnumToNum for GpioMode {
+impl EnumToNum for GPIOMode {
     fn to_num(&self) -> u32 {
         match self {
-            GpioMode::Input => 0x0,
-            GpioMode::Output => 0x1,
-            GpioMode::AlternateFunction => 0x2,
-            GpioMode::AnalogMode => 0x3,
+            GPIOMode::Input => 0x0,
+            GPIOMode::Output => 0x1,
+            GPIOMode::AlternateFunction => 0x2,
+            GPIOMode::AnalogMode => 0x3,
         }
     }
 }
 
-pub enum GpioType {
+pub enum GPIOType {
     PushPull,
     OpenDrain,
 }
 
-impl EnumToNum for GpioType {
+impl EnumToNum for GPIOType {
     fn to_num(&self) -> u32 {
         match self {
-            GpioType::PushPull => 0x0,
-            GpioType::OpenDrain => 0x1,
+            GPIOType::PushPull => 0x0,
+            GPIOType::OpenDrain => 0x1,
         }
     }
 }
 
-pub enum GpioPull {
+pub enum GPIOPull {
     NoPullupOrPulldown,
     Pullup,
     Pulldown,
 }
 
-impl EnumToNum for GpioPull {
+impl EnumToNum for GPIOPull {
     fn to_num(&self) -> u32 {
         match self {
-            GpioPull::NoPullupOrPulldown => 0x0,
-            GpioPull::Pullup => 0x1,
-            GpioPull::Pulldown => 0x2,
+            GPIOPull::NoPullupOrPulldown => 0x0,
+            GPIOPull::Pullup => 0x1,
+            GPIOPull::Pulldown => 0x2,
         }
     }
 }
 
-pub enum GpioSpeed {
+pub enum GPIOSpeed {
     LowSpeed,
     MediumSpeed,
     HighSpeed,
     VeryHighSpeed,
 }
 
-impl EnumToNum for GpioSpeed {
+impl EnumToNum for GPIOSpeed {
     fn to_num(&self) -> u32 {
         match self {
-            GpioSpeed::LowSpeed => 0x0,
-            GpioSpeed::MediumSpeed => 0x1,
-            GpioSpeed::HighSpeed => 0x2,
-            GpioSpeed::VeryHighSpeed => 0x3,
+            GPIOSpeed::LowSpeed => 0x0,
+            GPIOSpeed::MediumSpeed => 0x1,
+            GPIOSpeed::HighSpeed => 0x2,
+            GPIOSpeed::VeryHighSpeed => 0x3,
         }
     }
 }
 
-pub struct GPIOConfig {
-    moder: GpioMode,
-    otyper: GpioType,
-    pupdr: GpioPull,
-    ospeedr: GpioSpeed,
+pub enum GPIOAlternate {
+    AF0,
+    AF1,
+    AF2,
+    AF3,
+    AF4,
+    AF5,
+    AF6,
+    AF7,
+    AF8,
+    AF9,
+    AF10,
+    AF11,
+    AF12,
+    AF13,
+    AF14,
+    AF15,
+}
+
+impl EnumToNum for GPIOAlternate {
+    fn to_num(&self) -> u32 {
+        match self {
+            GPIOAlternate::AF0 => 0,
+            GPIOAlternate::AF1 => 1,
+            GPIOAlternate::AF2 => 2,
+            GPIOAlternate::AF3 => 3,
+            GPIOAlternate::AF4 => 4,
+            GPIOAlternate::AF5 => 5,
+            GPIOAlternate::AF6 => 6,
+            GPIOAlternate::AF7 => 7,
+            GPIOAlternate::AF8 => 8,
+            GPIOAlternate::AF9 => 9,
+            GPIOAlternate::AF10 => 10,
+            GPIOAlternate::AF11 => 11,
+            GPIOAlternate::AF12 => 12,
+            GPIOAlternate::AF13 => 13,
+            GPIOAlternate::AF14 => 14,
+            GPIOAlternate::AF15 => 15,
+        }
+    }
 }
 
 pub struct GPIORegister<const B: u32> {
@@ -93,37 +128,51 @@ impl<const B: u32> GPIORegister<B> {
         self.set_otyper(&config.otyper);
         self.set_pupdr(&config.pupdr);
         self.set_ospeedr(&config.ospeedr);
+        self.set_afr(&config.afr);
     }
 
-    fn set_moder(&mut self, moder: &GpioMode) {
+    fn set_moder(&mut self, moder: &GPIOMode) {
         let mut moder_data = unsafe { read_volatile(&self.get_port().MODER) };
         moder_data &= !(0x3 << self.pin * 2); // clear mode register
         moder_data |= moder.to_num() << self.pin * 2;
         unsafe { write_volatile(&mut self.get_port().MODER, moder_data) };
     }
 
-    fn set_otyper(&mut self, otyper: &GpioType) {
+    fn set_otyper(&mut self, otyper: &GPIOType) {
         let mut otyper_data = unsafe { read_volatile(&self.get_port().OTYPER) };
         otyper_data &= !(0x1 << self.pin); // clear type register
         otyper_data |= otyper.to_num() << self.pin;
         unsafe { write_volatile(&mut self.get_port().OTYPER, otyper_data) };
     }
 
-    fn set_ospeedr(&mut self, ospeedr: &GpioSpeed) {
+    fn set_ospeedr(&mut self, ospeedr: &GPIOSpeed) {
         let mut ospeedr_data = unsafe { read_volatile(&self.get_port().OSPEEDR) };
         ospeedr_data &= !(0x3 << self.pin * 2); // clear ospeedr register
         ospeedr_data |= ospeedr.to_num() << self.pin * 2;
         unsafe { write_volatile(&mut self.get_port().OSPEEDR, ospeedr_data) };
     }
 
-    fn set_pupdr(&mut self, pupdr: &GpioPull) {
+    fn set_pupdr(&mut self, pupdr: &GPIOPull) {
         let mut pupdr_data = unsafe { read_volatile(&self.get_port().PUPDR) };
         pupdr_data &= !(0x3 << self.pin * 2);
         pupdr_data |= pupdr.to_num() << self.pin * 2;
         unsafe { write_volatile(&mut self.get_port().PUPDR, pupdr_data) };
     }
 
-    // TODO, Add alternate function selection for USART
+    fn set_afr(&mut self, afr: &GPIOAlternate) {
+        let (register, pin) = if self.pin > 7 {
+            // Use AFRH
+            (&mut self.get_port().AFR[1], self.pin - 7)
+        } else {
+            // Use AFRL
+            (&mut self.get_port().AFR[0], self.pin)
+        };
+
+        let mut afr_data = unsafe { read_volatile(register) };
+        afr_data &= !(0xF << (pin << 2));
+        afr_data |= afr.to_num() << (pin << 2);
+        unsafe { write_volatile(register, afr_data) };
+    }
 
     fn set_bsrr(&mut self) {
         let mut bsrr_data = unsafe { read_volatile(&self.get_port().BSRR) };
@@ -166,27 +215,47 @@ pub struct GPIOPeripheral<const B: u32>;
 impl<const B: u32> GPIOPeripheral<B> {
     pub fn configure_as_output(&self, pin: u32) -> impl GpioOut {
         let config = GPIOConfig {
-            moder: GpioMode::Output,
-            otyper: GpioType::PushPull,
-            pupdr: GpioPull::NoPullupOrPulldown,
-            ospeedr: GpioSpeed::LowSpeed,
+            pin,
+            moder: GPIOMode::Output,
+            otyper: GPIOType::PushPull,
+            pupdr: GPIOPull::NoPullupOrPulldown,
+            ospeedr: GPIOSpeed::LowSpeed,
+            afr: GPIOAlternate::AF0,
         };
-        self.configure(pin, &config)
+        self.configure(&config)
     }
 
     pub fn configure_as_input(&self, pin: u32) -> impl GpioIn {
         let config = GPIOConfig {
-            moder: GpioMode::Input,
-            otyper: GpioType::PushPull,
-            pupdr: GpioPull::NoPullupOrPulldown,
-            ospeedr: GpioSpeed::LowSpeed,
+            pin,
+            moder: GPIOMode::Input,
+            otyper: GPIOType::PushPull,
+            pupdr: GPIOPull::NoPullupOrPulldown,
+            ospeedr: GPIOSpeed::LowSpeed,
+            afr: GPIOAlternate::AF0,
         };
-        self.configure(pin, &config)
+        self.configure(&config)
     }
+}
 
-    pub fn configure(&self, pin: u32, config: &GPIOConfig) -> GPIORegister<B> {
-        let mut gpio = GPIORegister::<B> { pin };
-        gpio.via_config(&config);
+pub struct GPIOConfig {
+    pin: u32,
+    moder: GPIOMode,
+    otyper: GPIOType,
+    pupdr: GPIOPull,
+    ospeedr: GPIOSpeed,
+    afr: GPIOAlternate,
+}
+
+impl<const B: u32> PeripheralConfiguration for GPIOPeripheral<B> {
+    type Config = GPIOConfig;
+    type Register = GPIORegister<B>;
+
+    fn configure(&self, configuration: &Self::Config) -> Self::Register {
+        let mut gpio = GPIORegister::<B> {
+            pin: configuration.pin,
+        };
+        gpio.via_config(&configuration);
         gpio
     }
 }

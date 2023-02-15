@@ -3,13 +3,6 @@ use core::{
     ops::{Deref, DerefMut},
 };
 
-pub trait Port<T, const B: u32> {
-    fn get_port(&self) -> &'static mut T {
-        let mutable_ref = unsafe { &mut *(B as *mut T) };
-        mutable_ref
-    }
-}
-
 pub struct Singleton<T> {
     data: RefCell<T>,
 }

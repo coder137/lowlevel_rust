@@ -25,8 +25,7 @@ fn main() -> ! {
 
     // Activate clock control for GPIOA and GPIOC
     let mut rcc_peripheral = RCC_PORT.take();
-    rcc_peripheral.set_ahb2enr(RCC_AHB2ENR::GPIOAEN);
-    rcc_peripheral.set_ahb2enr(RCC_AHB2ENR::GPIOCEN);
+    rcc_peripheral.set_ahb2enr(RCC_AHB2ENR::GPIOAEN | RCC_AHB2ENR::GPIOCEN);
 
     let gpioa_peripheral = GPIOA_PORT.take();
     let gpioc_peripheral = GPIOC_PORT.take();
