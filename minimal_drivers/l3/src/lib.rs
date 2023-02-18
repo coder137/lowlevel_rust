@@ -3,8 +3,8 @@
 mod interfaces;
 pub use interfaces::*;
 
-pub mod peripheral;
-pub use peripheral::*;
+pub mod singleton;
+pub use singleton::*;
 
 // TODO, Add features
 // #[cfg(feature = "stm32l475xx")]
