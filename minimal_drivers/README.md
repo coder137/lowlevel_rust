@@ -3,14 +3,19 @@
   - [Microcontrollers layers](#microcontrollers-layers)
   - [Pre-requisites](#pre-requisites)
   - [GPIO](#gpio)
+- [Terminology](#terminology)
 - [Changelog](#changelog)
+  - [L0 Layer - Controller](#l0-layer---controller)
+    - [Global](#global)
+    - [Utility](#utility)
+    - [STM32L475xx](#stm32l475xx)
   - [L2 Layer - Utilities](#l2-layer---utilities)
     - [Own implementation](#own-implementation)
     - [Crates.io](#cratesio)
   - [L3 Layer - Interfaces](#l3-layer---interfaces)
   - [L3 Layer - Drivers](#l3-layer---drivers)
   - [L3 Layer - Miscellaneous](#l3-layer---miscellaneous)
-  - [L4](#l4)
+  - [L4 Sensor / Actuator](#l4-sensor--actuator)
 
 # Minimal Drivers
 
@@ -60,7 +65,7 @@ This code has been tested on
 graph BT;
   subgraph Port
     GPIOA-H
-    subgraph Periphal
+    subgraph Peripheral
       GPIO
       subgraph Register
         MODER
@@ -73,8 +78,34 @@ graph BT;
     end
   end
 ```
+# Terminology
+
+- Chip
+- Controller
+- Port
+- Peripheral
+- Register
 
 # Changelog
+
+## L0 Layer - Controller
+
+### Global
+
+- System Clock
+  - Every microcontroller will have a system clock in Hz
+
+### Utility
+
+- Common macros for port and register access
+  - `get_port!`
+  - `read_register!`
+  - `write_register!`
+
+### STM32L475xx
+
+- Controller initialization
+  - For now it just updates the System Clock so that it can be used by upper layer (drivers etc)
 
 ## L2 Layer - Utilities
 
@@ -99,13 +130,18 @@ graph BT;
 
 - RCC
 - GPIO
+  - [x] Input
+  - [x] Output
+- USART
+  - [ ] Read
+  - [x] Write
 
 ## L3 Layer - Miscellaneous
 
 - Singleton
   - Safe access to global ports
 
-## L4 
+## L4 Sensor / Actuator
 
 - Led
 - Button
