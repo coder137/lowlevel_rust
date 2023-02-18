@@ -25,11 +25,10 @@ fn main() -> ! {
     use l3::*;
     use l4::*;
 
-    let mut rcc_peripheral = RCC_PORT.take();
-
+    let mut rcc_register = RCC_PORT.take().get_register();
     // Activate clock control for GPIOA, GPIOB and GPIOC and USART1EN
-    rcc_peripheral.set_ahb2enr(RCC_AHB2ENR::GPIOAEN | RCC_AHB2ENR::GPIOBEN | RCC_AHB2ENR::GPIOCEN);
-    rcc_peripheral.set_apb2enr(RCC_APB2ENR::USART1EN);
+    rcc_register.set_ahb2enr(RCC_AHB2ENR::GPIOAEN | RCC_AHB2ENR::GPIOBEN | RCC_AHB2ENR::GPIOCEN);
+    rcc_register.set_apb2enr(RCC_APB2ENR::USART1EN);
 
     let gpioa_peripheral = GPIOA_PORT.take();
     // Configure GPIOA port and Pin 5 as output
