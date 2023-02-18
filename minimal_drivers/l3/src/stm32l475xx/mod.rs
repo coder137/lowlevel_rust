@@ -1,5 +1,9 @@
-mod gpio;
 mod rcc;
-
-pub use gpio::*;
 pub use rcc::*;
+
+// Contains interfaces
+mod gpio;
+pub use gpio::*;
+
+mod usart;
+pub use usart::*;

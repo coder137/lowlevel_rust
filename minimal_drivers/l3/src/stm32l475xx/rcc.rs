@@ -2,7 +2,7 @@
 
 use core::ptr::{read_volatile, write_volatile};
 
-use l0::{RCC_TypeDef, RCC_BASE};
+use l0::controller::{RCC_TypeDef, RCC_BASE};
 use l2::bitflags;
 
 use crate::{Port, Singleton};
@@ -34,18 +34,18 @@ pub struct RCCPeripheral<const B: u32>;
 
 impl<const B: u32> RCCPeripheral<B> {
     pub fn set_ahb2enr(&mut self, ahb2: RCC_AHB2ENR) {
-        let mut ahb2enr = unsafe { read_volatile(&mut self.get_port().AHB2ENR) };
+        let mut ahb2enr = unsafe { read_volatile(&mut Self::get_port().AHB2ENR) };
         ahb2enr |= ahb2.bits();
         unsafe {
-            write_volatile(&mut self.get_port().AHB2ENR, ahb2enr);
+            write_volatile(&mut Self::get_port().AHB2ENR, ahb2enr);
         }
     }
 
     pub fn set_apb2enr(&mut self, apb2: RCC_APB2ENR) {
-        let mut apb2enr = unsafe { read_volatile(&mut self.get_port().AHB2ENR) };
+        let mut apb2enr = unsafe { read_volatile(&mut Self::get_port().APB2ENR) };
         apb2enr |= apb2.bits();
         unsafe {
-            write_volatile(&mut self.get_port().AHB2ENR, apb2enr);
+            write_volatile(&mut Self::get_port().APB2ENR, apb2enr);
         }
     }
 }

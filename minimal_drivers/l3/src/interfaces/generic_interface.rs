@@ -1,5 +1,5 @@
 pub trait Port<T, const B: u32> {
-    fn get_port(&self) -> &'static mut T {
+    fn get_port() -> &'static mut T {
         let mutable_ref = unsafe { &mut *(B as *mut T) };
         mutable_ref
     }
