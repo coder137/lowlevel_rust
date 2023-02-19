@@ -1,6 +1,9 @@
 #![allow(non_camel_case_types)]
 
-use core::ptr::{read_volatile, write_volatile};
+use core::{
+    fmt::Write,
+    ptr::{read_volatile, write_volatile},
+};
 
 use l0::{
     controller::{USART_TypeDef, USART1_BASE},
@@ -8,7 +11,7 @@ use l0::{
 };
 use l2::bitflags;
 
-use crate::{PeripheralConfiguration, Singleton, UsartIn, UsartInOut, UsartOut};
+use crate::{PeripheralConfiguration, Singleton, UsartIn, UsartInOut};
 
 bitflags! {
     pub struct USART_CR1 : u32 {
@@ -113,18 +116,21 @@ impl UsartIn for USARTRegister {
     }
 }
 
-impl UsartOut for USARTRegister {
-    fn write_character(&mut self, data: char) {
-        let bit_unset = |bit: u32| {
+impl Write for USARTRegister {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        let bit_not_set = |bit: u32| {
             let isr_data = read_register!(self.port.ISR);
             isr_data & (1 << bit) == 0
         };
 
         const ISR_TXE: u32 = 7;
         const ISR_TC: u32 = 6;
-        while bit_unset(ISR_TXE) {}
-        write_register!(self.port.TDR, data as u16);
-        while bit_unset(ISR_TC) {}
+        s.chars().for_each(|c| {
+            while bit_not_set(ISR_TXE) {}
+            write_register!(self.port.TDR, c as u16);
+        });
+        while bit_not_set(ISR_TC) {}
+        Ok(())
     }
 }
 
@@ -143,7 +149,7 @@ impl<const B: u32> USARTPeripheral<B> {
         })
     }
 
-    pub fn configure_default_tx(&self) -> impl UsartOut {
+    pub fn configure_default_tx(&self) -> impl Write {
         self.configure(&USARTConfig {
             mode: USARTMode::TxOnly,
             word_length: USARTWordLength::Len8,
