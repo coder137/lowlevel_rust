@@ -45,6 +45,26 @@ This code has been tested on
 - L4 Sensor
 - L5 Application
 
+```
+application v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l5)
+├── l0 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l0)
+│   [build-dependencies]
+│   └── bindgen v0.63.0
+├── l3 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l3)
+│   ├── l0 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l0) (*)
+│   └── l2 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l2)
+└── l4 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l4)
+    └── l3 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l3) (*)
+
+l0 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l0) (*)
+
+l2 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l2) (*)
+
+l3 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l3) (*)
+
+l4 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l4) (*)
+```
+
 ## Pre-requisites
 
 - Pre-requisites from `minimal_controller_peripheral`
