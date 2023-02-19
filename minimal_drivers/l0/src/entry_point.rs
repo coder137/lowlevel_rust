@@ -1,3 +1,5 @@
+use crate::chip::controller_init;
+
 #[link_section = ".vector_table.reset_vector"]
 #[no_mangle]
 pub static RESET_VECTOR: unsafe extern "C" fn() -> ! = Reset;
@@ -5,6 +7,7 @@ pub static RESET_VECTOR: unsafe extern "C" fn() -> ! = Reset;
 // NOTE, All the externed modules come here
 #[no_mangle]
 pub unsafe extern "C" fn Reset() -> ! {
+    // Data and BSS sections
     extern "C" {
         // .data section
         static mut __data_end__: u8;
@@ -16,7 +19,7 @@ pub unsafe extern "C" fn Reset() -> ! {
         static mut __bss_end__: u8;
     }
 
-    // data
+    // Copy from VMA to LMA
     let vma_data_end = &__data_end__ as *const u8;
     let vma_data_start = &__data_start__ as *const u8;
     let lma_data_start = &__etext as *const u8;
@@ -24,16 +27,22 @@ pub unsafe extern "C" fn Reset() -> ! {
     // core::ptr::copy_nonoverlapping(lma_data_start, &mut __data_start__ as *mut u8, count);
     core::ptr::copy_nonoverlapping(lma_data_start, vma_data_start as *mut u8, count);
 
-    // end
+    // Write 0 to .bss section
     let bss_end = &__bss_end__ as *const u8;
     let bss_start = &__bss_start__ as *const u8;
     let count = bss_end as usize - bss_start as usize;
     // core::ptr::write_bytes(&mut __bss_start__ as *mut u8, 0, count);
     core::ptr::write_bytes(bss_start as *mut u8, 0, count);
 
+    // Controller level startup system initialization
+
+    // Jump to L0 controller system init
+    // TODO, Jump to L4 board init
+    // Jump to L5 main function
     extern "Rust" {
         fn main() -> !;
     }
+    controller_init();
     main();
 }
 
@@ -68,7 +77,7 @@ pub static EXCEPTIONS: [Vector; 14] = [
     Vector { reserved: 0 },
     Vector { reserved: 0 },
     Vector { handler: SVCall },
-    Vector { reserved: 0 },
+    Vector { reserved: 0 }, // Debug Monitor Handler comes here
     Vector { reserved: 0 },
     Vector { handler: PendSV },
     Vector { handler: SysTick },

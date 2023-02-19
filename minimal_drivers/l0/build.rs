@@ -16,6 +16,8 @@ fn parse_header(input_filename: &str, output_path: &PathBuf) {
         .wrap_unsafe_ops(true)
         .translate_enum_integer_types(true)
         .explicit_padding(false)
+        .generate_block(true)
+        .default_enum_style(bindgen::EnumVariation::ModuleConsts)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect("Unable to generate bindings");
@@ -35,6 +37,9 @@ fn main() {
     };
 
     // TODO, Make this user configurable to support multiple microcontroller formats
+    // NOTE, This controller.rs contains both
+    // - Architecture considerations (ARM specific peripherals)
+    // - Microcontroller considerations (STM32 specific peripherals)
     const PARSE_INPUT_FILE: &str = "device/controller/stm32l475xx.h";
     const OUTPUT_FILE: &str = "src/controller.rs";
     if should_parse {

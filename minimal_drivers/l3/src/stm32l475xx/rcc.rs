@@ -2,10 +2,13 @@
 
 use core::ptr::{read_volatile, write_volatile};
 
-use l0::{RCC_TypeDef, RCC_BASE};
+use l0::{
+    controller::{RCC_TypeDef, RCC_BASE},
+    get_port, read_register, write_register,
+};
 use l2::bitflags;
 
-use crate::{Port, Singleton};
+use crate::Singleton;
 
 bitflags! {
     pub struct RCC_AHB2ENR : u32 {
@@ -29,28 +32,34 @@ bitflags! {
     }
 }
 
+pub struct RCCRegister {
+    port: &'static mut RCC_TypeDef,
+}
+
+impl RCCRegister {
+    pub fn set_ahb2enr(&mut self, ahb2: RCC_AHB2ENR) {
+        let mut ahb2enr_data = read_register!(self.port.AHB2ENR);
+        ahb2enr_data |= ahb2.bits();
+        write_register!(self.port.AHB2ENR, ahb2enr_data);
+    }
+
+    pub fn set_apb2enr(&mut self, apb2: RCC_APB2ENR) {
+        let mut apb2enr_data = read_register!(self.port.APB2ENR);
+        apb2enr_data |= apb2.bits();
+        write_register!(self.port.APB2ENR, apb2enr_data);
+    }
+}
+
 // Put functionality here i.e various valid configurations for your port
 pub struct RCCPeripheral<const B: u32>;
 
 impl<const B: u32> RCCPeripheral<B> {
-    pub fn set_ahb2enr(&mut self, ahb2: RCC_AHB2ENR) {
-        let mut ahb2enr = unsafe { read_volatile(&mut self.get_port().AHB2ENR) };
-        ahb2enr |= ahb2.bits();
-        unsafe {
-            write_volatile(&mut self.get_port().AHB2ENR, ahb2enr);
-        }
-    }
-
-    pub fn set_apb2enr(&mut self, apb2: RCC_APB2ENR) {
-        let mut apb2enr = unsafe { read_volatile(&mut self.get_port().AHB2ENR) };
-        apb2enr |= apb2.bits();
-        unsafe {
-            write_volatile(&mut self.get_port().AHB2ENR, apb2enr);
+    pub fn get_register(&self) -> RCCRegister {
+        RCCRegister {
+            port: get_port!(RCC_TypeDef, B),
         }
     }
 }
-
-impl<const B: u32> Port<RCC_TypeDef, B> for RCCPeripheral<B> {}
 
 // Create established ports here
 

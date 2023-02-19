@@ -8,6 +8,4 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-l0 = { path = "../l0" }
-l2 = { path = "../l2" }
 l3 = { path = "../l3" }
