@@ -3,7 +3,6 @@
   - [Microcontrollers layers](#microcontrollers-layers)
   - [Pre-requisites](#pre-requisites)
   - [GPIO](#gpio)
-- [Terminology](#terminology)
 - [Changelog](#changelog)
   - [L0 Layer - Controller](#l0-layer---controller)
     - [Global](#global)
@@ -13,6 +12,7 @@
     - [Own implementation](#own-implementation)
     - [Crates.io](#cratesio)
   - [L3 Layer - Interfaces](#l3-layer---interfaces)
+    - [Rust interfaces used](#rust-interfaces-used)
   - [L3 Layer - Drivers](#l3-layer---drivers)
   - [L3 Layer - Miscellaneous](#l3-layer---miscellaneous)
   - [L4 Sensor / Actuator](#l4-sensor--actuator)
@@ -78,14 +78,6 @@ graph BT;
     end
   end
 ```
-# Terminology
-
-- Chip
-- Controller
-- Port
-- Peripheral
-- Register
-
 # Changelog
 
 ## L0 Layer - Controller
@@ -120,11 +112,12 @@ graph BT;
 - GpioIn
 - GpioOut
 - UsartIn
-- UsartOut
 - UsartInOut
-- Port
-  - Generic interface that creates a port using base address and peripheral register layout
-  - In C it would be the equivalent of `GPIO_TypeDef * gpio = (GPIO_TypeDef *)BASE_ADDRESS`
+
+### Rust interfaces used
+
+- Write
+  - Used instead of creating out own UsartOut interface
 
 ## L3 Layer - Drivers
 
@@ -133,7 +126,7 @@ graph BT;
   - [x] Input
   - [x] Output
 - USART
-  - [ ] Read
+  - [x] Read
   - [x] Write
 
 ## L3 Layer - Miscellaneous
