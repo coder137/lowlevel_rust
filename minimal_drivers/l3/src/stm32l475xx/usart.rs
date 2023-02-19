@@ -1,16 +1,14 @@
-// TODO, Remove this later
-#![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
 use core::ptr::{read_volatile, write_volatile};
 
 use l0::{
     controller::{USART_TypeDef, USART1_BASE},
-    get_system_clock,
+    get_port, get_system_clock, read_register, write_register,
 };
 use l2::bitflags;
 
-use crate::{PeripheralConfiguration, Port, Singleton, UsartIn, UsartInOut, UsartOut};
+use crate::{PeripheralConfiguration, Singleton, UsartIn, UsartInOut, UsartOut};
 
 bitflags! {
     pub struct USART_CR1 : u32 {
@@ -49,9 +47,11 @@ pub enum USARTMode {
     RxTx,
 }
 
-pub struct USARTRegister<const B: u32> {}
+pub struct USARTRegister {
+    port: &'static mut USART_TypeDef,
+}
 
-impl<const B: u32> USARTRegister<B> {
+impl USARTRegister {
     fn via_configure(&mut self, config: &USARTConfig) {
         // Disable USART
         self.reset_cr1(USART_CR1::UE);
@@ -59,15 +59,21 @@ impl<const B: u32> USARTRegister<B> {
         // Baud rate
         let system_clock = get_system_clock();
         let usartdiv = system_clock / config.baud_rate;
-        unsafe { write_volatile(&mut Self::get_port().BRR, usartdiv) };
+        write_register!(self.port.BRR, usartdiv);
 
         // Stop bits
-        let mut cr2_data = unsafe { read_volatile(&Self::get_port().CR2) };
+        let mut cr2_data = read_register!(self.port.CR2);
         cr2_data &= (!USART_CR2::STOP).bits();
-        unsafe { write_volatile(&mut Self::get_port().CR2, cr2_data) };
+        cr2_data |= match config.stop_bit {
+            USARTStopBit::Bit1_0 => 0 << 12,
+            USARTStopBit::Bit0_5 => 1 << 12,
+            USARTStopBit::Bit2_0 => 2 << 12,
+            USARTStopBit::Bit1_5 => 3 << 12,
+        };
+        write_register!(self.port.CR2, cr2_data);
 
         // Set word length, usart mode and enable
-        let mut cr1_data = unsafe { read_volatile(&Self::get_port().CR1) };
+        let mut cr1_data = read_register!(self.port.CR1);
         cr1_data &= (!USART_CR1::all()).bits();
 
         // Set word length
@@ -88,50 +94,59 @@ impl<const B: u32> USARTRegister<B> {
         // Enable
         cr1_data |= USART_CR1::UE.bits();
 
-        unsafe { write_volatile(&mut Self::get_port().CR1, cr1_data) };
+        write_register!(self.port.CR1, cr1_data);
     }
 
     fn reset_cr1(&mut self, cr1: USART_CR1) {
-        let mut cr1_data = unsafe { read_volatile(&Self::get_port().CR1) };
+        let mut cr1_data = read_register!(self.port.CR1);
         cr1_data &= !(cr1.bits());
-        unsafe { write_volatile(&mut Self::get_port().CR1, cr1_data) };
+        write_register!(self.port.CR1, cr1_data);
     }
 }
 
-impl<const B: u32> Port<USART_TypeDef, B> for USARTRegister<B> {}
-
-impl<const B: u32> UsartIn for USARTRegister<B> {
+impl UsartIn for USARTRegister {
     fn read_character(&mut self) -> char {
         todo!()
     }
 }
 
-impl<const B: u32> UsartOut for USARTRegister<B> {
+impl UsartOut for USARTRegister {
     fn write_character(&mut self, data: char) {
         let is_bit_set = |bit: u32| {
-            let isr_data = unsafe { read_volatile(&Self::get_port().ISR) };
+            let isr_data = read_register!(self.port.ISR);
             isr_data & (1 << bit) == 0
         };
 
-        while is_bit_set(7) {}
-        unsafe { write_volatile(&mut Self::get_port().TDR, data as u16) };
-        while is_bit_set(6) {}
+        const ISR_TXE: u32 = 7;
+        const ISR_TC: u32 = 6;
+        while is_bit_set(ISR_TXE) {}
+        write_register!(self.port.TDR, data as u16);
+        while is_bit_set(ISR_TC) {}
     }
 }
 
-impl<const B: u32> UsartInOut for USARTRegister<B> {}
+impl UsartInOut for USARTRegister {}
 
+// Put functionality here i.e various valid configurations for your peripheral
 pub struct USARTPeripheral<const B: u32> {}
 
 impl<const B: u32> USARTPeripheral<B> {
-    pub fn configure_as_rx(&self) -> impl UsartIn {
-        let usart = USARTRegister::<B> {};
-        usart
+    pub fn configure_default_rx(&self) -> impl UsartIn {
+        self.configure(&USARTConfig {
+            mode: USARTMode::RxOnly,
+            word_length: USARTWordLength::Len8,
+            stop_bit: USARTStopBit::Bit1_0,
+            baud_rate: 115200,
+        })
     }
 
-    pub fn configure_as_tx(&self) -> impl UsartOut {
-        let usart = USARTRegister::<B> {};
-        usart
+    pub fn configure_default_tx(&self) -> impl UsartOut {
+        self.configure(&USARTConfig {
+            mode: USARTMode::TxOnly,
+            word_length: USARTWordLength::Len8,
+            stop_bit: USARTStopBit::Bit1_0,
+            baud_rate: 115200,
+        })
     }
 
     pub fn configure_default_rx_tx(&self) -> impl UsartInOut {
@@ -153,14 +168,18 @@ pub struct USARTConfig {
 
 impl<const B: u32> PeripheralConfiguration for USARTPeripheral<B> {
     type Config = USARTConfig;
-    type Register = USARTRegister<B>;
+    type Register = USARTRegister;
 
     fn configure(&self, configuration: &Self::Config) -> Self::Register {
-        let mut usart = USARTRegister::<B> {};
+        let mut usart = USARTRegister {
+            port: get_port!(USART_TypeDef, B),
+        };
         usart.via_configure(&configuration);
         usart
     }
 }
+
+// Create established ports here
 
 type USART1 = USARTPeripheral<USART1_BASE>;
 
