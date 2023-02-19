@@ -63,6 +63,13 @@ fn main() -> ! {
         usart1_rx_tx
             .write_fmt(format_args!("LED ON: {}\r\n", counter))
             .unwrap();
+        usart1_rx_tx
+            .write_str("Waiting for a character\r\n> ")
+            .unwrap();
+        let char = usart1_rx_tx.read_character();
+        usart1_rx_tx
+            .write_fmt(format_args!("Character: {:#?}\r\n", char))
+            .unwrap();
         spin_delay(time);
         led.off();
         usart1_rx_tx

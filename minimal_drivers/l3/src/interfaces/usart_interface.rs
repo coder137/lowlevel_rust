@@ -11,12 +11,6 @@ pub trait UsartOut {
 
 pub trait UsartIn {
     fn read_character(&mut self) -> char;
-    fn read_chars(&mut self, data: &mut [char]) {
-        let c = self.read_character();
-        data.iter_mut().for_each(|d| {
-            *d = c;
-        });
-    }
 }
 
 pub trait UsartInOut: UsartIn + UsartOut {}

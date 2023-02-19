@@ -106,22 +106,25 @@ impl USARTRegister {
 
 impl UsartIn for USARTRegister {
     fn read_character(&mut self) -> char {
-        todo!()
+        const ISR_RXNE: u32 = 5;
+        while (read_register!(self.port.ISR) & 1 << ISR_RXNE) == 0 {}
+        let data = read_register!(self.port.RDR) as u8;
+        data as char
     }
 }
 
 impl UsartOut for USARTRegister {
     fn write_character(&mut self, data: char) {
-        let is_bit_set = |bit: u32| {
+        let bit_unset = |bit: u32| {
             let isr_data = read_register!(self.port.ISR);
             isr_data & (1 << bit) == 0
         };
 
         const ISR_TXE: u32 = 7;
         const ISR_TC: u32 = 6;
-        while is_bit_set(ISR_TXE) {}
+        while bit_unset(ISR_TXE) {}
         write_register!(self.port.TDR, data as u16);
-        while is_bit_set(ISR_TC) {}
+        while bit_unset(ISR_TC) {}
     }
 }
 
