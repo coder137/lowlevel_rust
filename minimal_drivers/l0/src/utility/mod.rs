@@ -15,7 +15,7 @@ macro_rules! read_register {
 // TODO, Overload this macro to support $data:literal
 #[macro_export]
 macro_rules! write_register {
-    ($register:expr, $data:ident) => {
+    ($register:expr, $data:expr) => {
         unsafe { write_volatile(&mut $register, $data) }
     };
 }
