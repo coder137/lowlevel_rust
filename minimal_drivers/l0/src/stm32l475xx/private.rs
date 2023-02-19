@@ -7,7 +7,7 @@ use crate::controller::{RCC_TypeDef, RCC_BASE};
 pub fn controller_init() {
     // Update the System clock
     let rcc_port = get_port!(RCC_TypeDef, RCC_BASE);
-    let cr_data = read_register!(rcc_port, CR);
+    let cr_data = read_register!(rcc_port.CR);
     let msi_range = (cr_data >> 4) & 0xF;
     let system_clock: u32 = match msi_range {
         0 => todo!(),
