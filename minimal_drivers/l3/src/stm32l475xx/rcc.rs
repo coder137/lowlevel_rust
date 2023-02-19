@@ -4,11 +4,11 @@ use core::ptr::{read_volatile, write_volatile};
 
 use l0::{
     controller::{RCC_TypeDef, RCC_BASE},
-    read_register, write_register,
+    get_port, read_register, write_register,
 };
 use l2::bitflags;
 
-use crate::{Port, Singleton};
+use crate::Singleton;
 
 bitflags! {
     pub struct RCC_AHB2ENR : u32 {
@@ -56,12 +56,10 @@ pub struct RCCPeripheral<const B: u32>;
 impl<const B: u32> RCCPeripheral<B> {
     pub fn get_register(&self) -> RCCRegister {
         RCCRegister {
-            port: Self::get_port(),
+            port: get_port!(RCC_TypeDef, B),
         }
     }
 }
-
-impl<const B: u32> Port<RCC_TypeDef, B> for RCCPeripheral<B> {}
 
 // Create established ports here
 
