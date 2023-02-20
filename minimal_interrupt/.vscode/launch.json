@@ -1,0 +1,36 @@
+{
+  "configurations": [
+    {
+      "cwd": "${workspaceFolder}",
+      "executable": "target/thumbv7em-none-eabihf/debug/application",
+      "configFiles": [
+        "stm32l4discovery.cfg"
+      ],
+      "postLaunchCommands": [
+        "load",
+        "monitor arm semihosting enable",
+      ],
+      "name": "Rust Debug",
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+      "svdFile": "l0/svd/STM32L4x5.svd",
+      "svdPath": "l0/svd/STM32L4x5.svd"
+    },
+    {
+      "cwd": "${workspaceFolder}",
+      "executable": "target/thumbv7em-none-eabihf/release/application",
+      "configFiles": [
+        "stm32l4discovery.cfg"
+      ],
+      "postLaunchCommands": [
+        "load",
+        "monitor arm semihosting enable",
+      ],
+      "name": "Rust Release",
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd"
+    }
+  ]
+}
