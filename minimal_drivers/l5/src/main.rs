@@ -39,7 +39,7 @@ fn main() -> ! {
     gpiob_peripheral.configure_for_usart(GPIOAlternate::AF7, 6);
     gpiob_peripheral.configure_for_usart(GPIOAlternate::AF7, 7);
 
-    let usart1_rx_tx: &mut dyn UsartInOut = &mut USART1_PORT.take().configure_default_rx_tx();
+    let mut usart1_rx_tx = USART1_PORT.take().configure_default_rx_tx();
 
     let gpioc_peripheral = GPIOC_PORT.take();
     // Configure GPIOC port and Pin 13 as input
