@@ -1,12 +1,8 @@
 use crate::chip::controller_init;
 
-#[link_section = ".vector_table.reset_vector"]
-#[no_mangle]
-pub static RESET_VECTOR: unsafe extern "C" fn() -> ! = Reset;
-
 // NOTE, All the externed modules come here
 #[no_mangle]
-pub unsafe extern "C" fn Reset() -> ! {
+pub unsafe extern "C" fn Reset() {
     // Data and BSS sections
     extern "C" {
         // .data section
@@ -46,44 +42,56 @@ pub unsafe extern "C" fn Reset() -> ! {
     main();
 }
 
+extern "C" {
+    fn __StackTop();
+}
+
+#[repr(C)]
 pub union Vector {
     reserved: u32,
     handler: unsafe extern "C" fn(),
 }
 
-extern "C" {
-    fn NMI();
-    fn HardFault();
-    fn MemManage();
-    fn BusFault();
-    fn UsageFault();
-    fn SVCall();
-    fn PendSV();
-    fn SysTick();
-}
-
 #[link_section = ".vector_table.exceptions"]
 #[no_mangle]
-pub static EXCEPTIONS: [Vector; 14] = [
-    Vector { handler: NMI },
-    Vector { handler: HardFault },
-    Vector { handler: MemManage },
-    Vector { handler: BusFault },
+pub static EXCEPTIONS: [Vector; 16] = [
     Vector {
-        handler: UsageFault,
+        handler: __StackTop,
     },
+    Vector { handler: Reset },
+    Vector {
+        handler: DefaultExceptionHandler,
+    }, // NMI
+    Vector {
+        handler: DefaultExceptionHandler,
+    }, // HardFault
+    Vector {
+        handler: DefaultExceptionHandler,
+    }, // MemManage
+    Vector {
+        handler: DefaultExceptionHandler,
+    }, // BusFault
+    Vector {
+        handler: DefaultExceptionHandler,
+    }, // UsageFault
     Vector { reserved: 0 },
     Vector { reserved: 0 },
     Vector { reserved: 0 },
     Vector { reserved: 0 },
-    Vector { handler: SVCall },
-    Vector { reserved: 0 }, // Debug Monitor Handler comes here
+    Vector {
+        handler: DefaultExceptionHandler,
+    }, // SVCall
+    Vector {
+        handler: DefaultExceptionHandler,
+    }, // Debug
     Vector { reserved: 0 },
-    Vector { handler: PendSV },
-    Vector { handler: SysTick },
+    Vector {
+        handler: DefaultExceptionHandler,
+    }, // PendSV
+    Vector {
+        handler: DefaultExceptionHandler,
+    }, // SysTick
 ];
-
-// TODO, Add peripheral interrupts here
 
 #[no_mangle]
 pub extern "C" fn DefaultExceptionHandler() {

@@ -130,9 +130,8 @@ SECTIONS
 {
   .text :
   {
-    LONG(ORIGIN(RAM) + LENGTH(RAM));
-    KEEP(*(.vector_table.reset_vector))
     KEEP(*(.vector_table.exceptions))
+    KEEP(*(.vector_table.interrupts))
     *(.text*)
 
     KEEP(*(.init))
@@ -328,12 +327,3 @@ SECTIONS
   /* Check if data + heap + stack exceeds RAM limit */
   ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
 }
-
-PROVIDE(NMI = DefaultExceptionHandler);
-PROVIDE(HardFault = DefaultExceptionHandler);
-PROVIDE(MemManage = DefaultExceptionHandler);
-PROVIDE(BusFault = DefaultExceptionHandler);
-PROVIDE(UsageFault = DefaultExceptionHandler);
-PROVIDE(SVCall = DefaultExceptionHandler);
-PROVIDE(PendSV = DefaultExceptionHandler);
-PROVIDE(SysTick = DefaultExceptionHandler);
