@@ -1,5 +1,10 @@
-use crate::{get_port, global::SYSTEM_CLOCK, read_register};
-use core::ptr::read_volatile;
+use crate::{
+    controller::{SCB_Type, FLASH_BASE, SCB_BASE},
+    get_port,
+    global::SYSTEM_CLOCK,
+    read_register, write_register,
+};
+use core::ptr::{read_volatile, write_volatile};
 use core::sync::atomic::Ordering;
 
 use crate::controller::{RCC_TypeDef, RCC_BASE};
@@ -24,7 +29,9 @@ pub fn controller_init() {
         11 => todo!(),
         _ => unreachable!(),
     };
-    SYSTEM_CLOCK.store(system_clock, Ordering::SeqCst)
+    SYSTEM_CLOCK.store(system_clock, Ordering::SeqCst);
 
-    // TODO, Do more things
+    // Set SCB VTOR
+    let scb_port = get_port!(SCB_Type, SCB_BASE);
+    write_register!(scb_port.VTOR, FLASH_BASE);
 }
