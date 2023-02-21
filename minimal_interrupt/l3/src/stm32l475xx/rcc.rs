@@ -27,6 +27,7 @@ bitflags! {
 
 bitflags! {
     pub struct RCC_APB2ENR : u32 {
+        const SYSCFGEN = 1 << 0;
         const USART1EN = 1 << 14;
         // TODO, Add more
     }
