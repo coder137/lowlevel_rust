@@ -19,3 +19,11 @@ macro_rules! write_register {
         unsafe { write_volatile(&mut $register, $data) }
     };
 }
+
+#[macro_export]
+macro_rules! write_assign_register {
+    ($register:expr, $operation:tt, $data:expr) => {
+        let read_data = read_register!($register);
+        write_register!($register, read_data $operation $data);
+    };
+}
