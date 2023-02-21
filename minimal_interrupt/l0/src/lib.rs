@@ -22,6 +22,13 @@ use stm32l475xx as chip;
 mod utility; // Macro export makes macros always public
 pub use global::get_system_clock;
 
+// TODO, Add features
+// #[cfg(feature = "arm_cm4")]
+mod arm_cm4;
+pub use arm_cm4::*;
+
+pub use chip::public::*;
+
 // Generated controller bindings from C to Rust
 pub mod controller;
 
