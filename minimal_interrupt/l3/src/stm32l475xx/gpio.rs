@@ -2,7 +2,10 @@
 
 use crate::Singleton;
 use crate::{EnumToNum, GpioIn, GpioOut, GpioValue, PeripheralConfiguration};
-use l0::{controller::*, get_port, read_register, write_register};
+use l0::{
+    get_port, read_register, write_register, GPIO_TypeDef, GPIOA_BASE, GPIOB_BASE, GPIOC_BASE,
+    GPIOD_BASE, GPIOE_BASE, GPIOF_BASE, GPIOG_BASE, GPIOH_BASE,
+};
 
 pub enum GPIOMode {
     Input,

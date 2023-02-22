@@ -25,10 +25,7 @@ fn main() -> ! {
         ptr,
         sync::atomic::{AtomicBool, AtomicPtr, Ordering},
     };
-    use l0::{
-        controller::{IRQn_Type::*, *},
-        *,
-    };
+    use l0::{IRQn_Type::EXTI15_10_IRQn, *};
     use l3::*;
     use l4::*;
 

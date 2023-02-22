@@ -1,9 +1,6 @@
 #![allow(non_camel_case_types)]
 
-use l0::{
-    controller::{RCC_TypeDef, RCC_BASE},
-    get_port, read_register, write_register,
-};
+use l0::{get_port, read_register, write_register, RCC_TypeDef, RCC_BASE};
 use l2::bitflags;
 
 use crate::Singleton;

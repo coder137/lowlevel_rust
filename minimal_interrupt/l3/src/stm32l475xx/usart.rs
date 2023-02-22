@@ -2,10 +2,7 @@
 
 use core::fmt::Write;
 
-use l0::{
-    controller::{USART_TypeDef, USART1_BASE},
-    get_port, get_system_clock, read_register, write_register,
-};
+use l0::{get_port, get_system_clock, read_register, write_register, USART_TypeDef, USART1_BASE};
 use l2::bitflags;
 
 use crate::{PeripheralConfiguration, Singleton, UsartIn, UsartInOut};
