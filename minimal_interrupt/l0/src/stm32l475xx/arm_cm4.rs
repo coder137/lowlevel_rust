@@ -1,8 +1,5 @@
 pub mod nvic {
-    use crate::{
-        controller::{NVIC_Type, NVIC_BASE},
-        get_port, write_register,
-    };
+    use crate::{get_port, write_register, NVIC_Type, NVIC_BASE};
 
     pub fn enable_irq(irq: u8) {
         // NVIC->ISER[(((uint32_t)IRQn) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));

@@ -1,12 +1,8 @@
 use crate::{
-    controller::{SCB_Type, FLASH_BASE, SCB_BASE},
-    get_port,
-    global::SYSTEM_CLOCK,
-    read_register, write_register,
+    get_port, global::SYSTEM_CLOCK, read_register, write_register, RCC_TypeDef, SCB_Type,
+    FLASH_BASE, RCC_BASE, SCB_BASE,
 };
 use core::sync::atomic::Ordering;
-
-use crate::controller::{RCC_TypeDef, RCC_BASE};
 
 pub fn controller_init() {
     // Update the System clock

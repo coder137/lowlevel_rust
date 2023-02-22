@@ -41,7 +41,7 @@ fn main() {
     // - Architecture considerations (ARM specific peripherals)
     // - Microcontroller considerations (STM32 specific peripherals)
     const PARSE_INPUT_FILE: &str = "device/controller/stm32l475xx.h";
-    const OUTPUT_FILE: &str = "src/controller.rs";
+    const OUTPUT_FILE: &str = "src/stm32l475xx/controller.rs";
     if should_parse {
         parse_header(PARSE_INPUT_FILE, &PathBuf::from(OUTPUT_FILE));
     }
