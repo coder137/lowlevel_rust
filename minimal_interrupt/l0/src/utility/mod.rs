@@ -8,7 +8,7 @@ macro_rules! get_port {
 #[macro_export]
 macro_rules! read_register {
     ($register:expr) => {
-        unsafe { read_volatile(&$register) }
+        unsafe { core::ptr::read_volatile(&$register) }
     };
 }
 
@@ -16,7 +16,7 @@ macro_rules! read_register {
 #[macro_export]
 macro_rules! write_register {
     ($register:expr, $data:expr) => {
-        unsafe { write_volatile(&mut $register, $data) }
+        unsafe { core::ptr::write_volatile(&mut $register, $data) }
     };
 }
 

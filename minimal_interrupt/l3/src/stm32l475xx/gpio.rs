@@ -1,7 +1,5 @@
 #![allow(dead_code)]
 
-use core::ptr::{read_volatile, write_volatile};
-
 use crate::Singleton;
 use crate::{EnumToNum, GpioIn, GpioOut, GpioValue, PeripheralConfiguration};
 use l0::{controller::*, get_port, read_register, write_register};

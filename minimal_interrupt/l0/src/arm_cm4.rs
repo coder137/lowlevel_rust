@@ -1,6 +1,4 @@
 pub mod nvic {
-    use core::ptr::write_volatile;
-
     use crate::{
         controller::{NVIC_Type, NVIC_BASE},
         get_port, write_register,

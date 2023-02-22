@@ -4,7 +4,6 @@ use crate::{
     global::SYSTEM_CLOCK,
     read_register, write_register,
 };
-use core::ptr::{read_volatile, write_volatile};
 use core::sync::atomic::Ordering;
 
 use crate::controller::{RCC_TypeDef, RCC_BASE};

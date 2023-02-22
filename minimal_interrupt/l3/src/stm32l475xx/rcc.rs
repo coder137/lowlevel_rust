@@ -1,7 +1,5 @@
 #![allow(non_camel_case_types)]
 
-use core::ptr::{read_volatile, write_volatile};
-
 use l0::{
     controller::{RCC_TypeDef, RCC_BASE},
     get_port, read_register, write_register,

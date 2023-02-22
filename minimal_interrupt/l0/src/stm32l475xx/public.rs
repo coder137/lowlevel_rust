@@ -1,5 +1,3 @@
-use core::ptr::read_volatile;
-
 use crate::{
     controller::{SCB_Type, SCB_BASE},
     get_port, read_register,

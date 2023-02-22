@@ -1,9 +1,6 @@
 #![allow(non_camel_case_types)]
 
-use core::{
-    fmt::Write,
-    ptr::{read_volatile, write_volatile},
-};
+use core::fmt::Write;
 
 use l0::{
     controller::{USART_TypeDef, USART1_BASE},
