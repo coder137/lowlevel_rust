@@ -22,8 +22,8 @@ pub fn spin_delay(delay: u32) {
 fn main() -> ! {
     use core::{
         fmt::Write,
-        ptr::{read_volatile, write_volatile},
-        sync::atomic::{AtomicBool, Ordering},
+        ptr,
+        sync::atomic::{AtomicBool, AtomicPtr, Ordering},
     };
     use l0::{
         controller::{IRQn_Type::*, *},
@@ -50,14 +50,6 @@ fn main() -> ! {
 
     // GPIOC Pin 13, Interrupt activation
     fn configure_gpio_input_interrupt() {
-        attach_interrupt_handler(Interrupt::EXTI15_10, &|| {
-            let exti_port = get_port!(EXTI_TypeDef, EXTI_BASE);
-            if read_register!(exti_port.PR1) >> 13 & 0x01 == 1 {
-                write_assign_register!(exti_port.PR1, |, 1 << 13);
-                BUTTON_PRESSED.store(true, Ordering::SeqCst);
-            }
-        });
-
         // Configure SYSCFG port for pin 13
         let syscfg_port = get_port!(SYSCFG_TypeDef, SYSCFG_BASE);
         write_assign_register!(syscfg_port.EXTICR[3], |, (1 << 1) << 4);
@@ -98,6 +90,13 @@ fn main() -> ! {
     // Button module
     static BUTTON_PRESSED: AtomicBool = AtomicBool::new(false);
     configure_gpio_input();
+    attach_interrupt_handler(Interrupt::EXTI15_10, || {
+        let exti_port = get_port!(EXTI_TypeDef, EXTI_BASE);
+        if read_register!(exti_port.PR1) >> 13 & 0x01 == 1 {
+            write_assign_register!(exti_port.PR1, |, 1 << 13);
+            BUTTON_PRESSED.store(true, Ordering::SeqCst);
+        }
+    });
     configure_gpio_input_interrupt();
 
     // USART

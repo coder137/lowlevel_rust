@@ -88,20 +88,8 @@ pub enum Interrupt {
     FPU,
 }
 
-#[no_mangle]
-pub extern "C" fn DefaultInterruptHandler() {
-    let scb_port = get_port!(SCB_Type, SCB_BASE);
-    let irq_num = (read_register!(scb_port.ICSR) & 0xFF) - 16;
-    unsafe {
-        MY_INTERRUPTS
-            .get(irq_num as usize)
-            .expect("No interrupt registered")();
-    }
-}
-
-static mut MY_INTERRUPTS: [&dyn Fn() -> (); 82] = [&|| {}; 82];
-
-pub fn attach_interrupt_handler(interrupt: Interrupt, handler: &'static dyn Fn()) {
+static mut MY_INTERRUPTS: [fn(); 82] = [|| {}; 82];
+pub fn attach_interrupt_handler(interrupt: Interrupt, handler: fn()) {
     let index: usize = interrupt as usize;
     unsafe {
         MY_INTERRUPTS[index] = handler;
@@ -111,3 +99,14 @@ pub fn attach_interrupt_handler(interrupt: Interrupt, handler: &'static dyn Fn()
 #[link_section = ".vector_table.interrupts"]
 #[no_mangle]
 static INTERRUPTS: [unsafe extern "C" fn(); 82] = [DefaultInterruptHandler; 82];
+
+#[no_mangle]
+extern "C" fn DefaultInterruptHandler() {
+    let scb_port = get_port!(SCB_Type, SCB_BASE);
+    let irq_num = (read_register!(scb_port.ICSR) & 0xFF) - 16;
+    unsafe {
+        MY_INTERRUPTS
+            .get(irq_num as usize)
+            .expect("No interrupt registered")();
+    }
+}
