@@ -1,5 +1,6 @@
-use crate::{get_port, read_register, SCB_Type, SCB_BASE};
+use crate::{read_register, SCB_PORT};
 
+#[derive(Copy, Clone)]
 pub enum Interrupt {
     WWDG,
     PVD_PVM,
@@ -85,7 +86,7 @@ pub enum Interrupt {
     FPU,
 }
 
-static mut MY_INTERRUPTS: [fn(); 82] = [|| {}; 82];
+static mut MY_INTERRUPTS: [fn(); 82] = [|| loop {}; 82];
 pub fn attach_interrupt_handler(interrupt: Interrupt, handler: fn()) {
     let index: usize = interrupt as usize;
     unsafe {
@@ -99,7 +100,7 @@ static INTERRUPTS: [unsafe extern "C" fn(); 82] = [DefaultInterruptHandler; 82];
 
 #[no_mangle]
 extern "C" fn DefaultInterruptHandler() {
-    let scb_port = get_port!(SCB_Type, SCB_BASE);
+    let scb_port = SCB_PORT::port();
     let irq_num = (read_register!(scb_port.ICSR) & 0xFF) - 16;
     unsafe {
         MY_INTERRUPTS

@@ -7,6 +7,7 @@ mod entry_point;
 mod interrupt;
 // Generated controller bindings from C to Rust
 mod controller;
+mod registers;
 
 // Use only within L0
 mod private;
