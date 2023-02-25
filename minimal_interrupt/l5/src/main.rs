@@ -25,7 +25,7 @@ fn main() -> ! {
         ptr,
         sync::atomic::{AtomicBool, AtomicPtr, Ordering},
     };
-    use l0::{IRQn_Type::EXTI15_10_IRQn, *};
+    use l0::*;
     use l3::*;
     use l4::*;
 
@@ -48,19 +48,15 @@ fn main() -> ! {
     // GPIOC Pin 13, Interrupt activation
     fn configure_gpio_input_interrupt() {
         // Configure SYSCFG port for pin 13
-        let syscfg_port = get_port!(SYSCFG_TypeDef, SYSCFG_BASE);
+        // Select the GPIO pin which triggers this Interrupt
+        let syscfg_port = SYSCFG_PORT::port();
         write_assign_register!(syscfg_port.EXTICR[3], |, (1 << 1) << 4);
 
         // Configure EXTI register for pin 13
-        // Configure IMR and set the RTSR or FTSR register
-        let exti_port = get_port!(EXTI_TypeDef, EXTI_BASE);
-        write_assign_register!(exti_port.IMR1, |, 1 << 13);
-
-        // Falling edge
-        write_assign_register!(exti_port.RTSR1, |, 1 << 13);
+        EXTI::get_register().configure_interrupt(13, EXTIType::FallingEdge);
 
         // Enable NVIC IRQ
-        nvic::enable_irq(EXTI15_10_IRQn as u8);
+        nvic::enable_irq(Interrupt::EXTI15_10);
     }
 
     // GPIOB Pin 6, 7
@@ -88,9 +84,9 @@ fn main() -> ! {
     static BUTTON_PRESSED: AtomicBool = AtomicBool::new(false);
     configure_gpio_input();
     attach_interrupt_handler(Interrupt::EXTI15_10, || {
-        let exti_port = get_port!(EXTI_TypeDef, EXTI_BASE);
-        if read_register!(exti_port.PR1) >> 13 & 0x01 == 1 {
-            write_assign_register!(exti_port.PR1, |, 1 << 13);
+        let mut exti_register = EXTI::get_register();
+        if exti_register.is_pending_interrupt(13) {
+            exti_register.clear_pending_interrupt(13);
             BUTTON_PRESSED.store(true, Ordering::SeqCst);
         }
     });
@@ -102,9 +98,10 @@ fn main() -> ! {
     const TIME: u32 = 100_000;
     let mut counter = 0;
     loop {
-        if BUTTON_PRESSED.load(Ordering::SeqCst) {
+        if let Ok(_) =
+            BUTTON_PRESSED.compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
+        {
             usart1_rx_tx.write_str("Button Pressed\r\n").unwrap();
-            BUTTON_PRESSED.store(false, Ordering::SeqCst);
         }
 
         // Can also use write! and writeln!
