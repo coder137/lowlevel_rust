@@ -61,4 +61,4 @@ impl<const B: u32> RCCPeripheral<B> {
 
 type RCC = RCCPeripheral<RCC_BASE>;
 
-pub static RCC_PORT: Singleton<RCC> = Singleton::new(RCC {});
+pub static RCC_GLOBAL: Singleton<RCC> = Singleton::new(RCC {});

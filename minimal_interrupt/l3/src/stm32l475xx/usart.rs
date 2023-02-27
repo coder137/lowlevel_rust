@@ -186,4 +186,4 @@ impl<const B: u32> PeripheralConfiguration for USARTPeripheral<B> {
 
 type USART1 = USARTPeripheral<USART1_BASE>;
 
-pub static USART1_PORT: Singleton<USART1> = Singleton::new(USART1 {});
+pub static USART1_GLOBAL: Singleton<USART1> = Singleton::new(USART1 {});
