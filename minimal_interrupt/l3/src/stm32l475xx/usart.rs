@@ -5,7 +5,7 @@ use core::fmt::Write;
 use l0::{get_port, get_system_clock, read_register, write_register, USART_TypeDef, USART1_BASE};
 use l2::bitflags;
 
-use crate::{PeripheralConfiguration, Singleton, UsartIn, UsartInOut};
+use crate::{Singleton, UsartIn, UsartInOut};
 
 bitflags! {
     pub struct USART_CR1 : u32 {
@@ -22,6 +22,15 @@ bitflags! {
     pub struct USART_CR2 : u32 {
         const STOP = 3 << 12;
     }
+}
+
+/// USARTConfig
+
+pub struct USARTConfig {
+    mode: USARTMode,
+    word_length: USARTWordLength,
+    stop_bit: USARTStopBit,
+    baud_rate: u32,
 }
 
 pub enum USARTWordLength {
@@ -44,11 +53,13 @@ pub enum USARTMode {
     RxTx,
 }
 
-pub struct USARTRegister {
+/// USARTPolledFunction
+
+pub struct USARTPolledFunction {
     port: &'static mut USART_TypeDef,
 }
 
-impl USARTRegister {
+impl USARTPolledFunction {
     fn via_configure(&mut self, config: &USARTConfig) {
         // Disable USART
         self.reset_cr1(USART_CR1::UE);
@@ -101,7 +112,7 @@ impl USARTRegister {
     }
 }
 
-impl UsartIn for USARTRegister {
+impl UsartIn for USARTPolledFunction {
     fn read_character(&mut self) -> char {
         const ISR_RXNE: u32 = 5;
         while (read_register!(self.port.ISR) & 1 << ISR_RXNE) == 0 {}
@@ -110,7 +121,7 @@ impl UsartIn for USARTRegister {
     }
 }
 
-impl Write for USARTRegister {
+impl Write for USARTPolledFunction {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         let bit_not_set = |bit: u32| {
             let isr_data = read_register!(self.port.ISR);
@@ -128,14 +139,16 @@ impl Write for USARTRegister {
     }
 }
 
-impl UsartInOut for USARTRegister {}
+impl UsartInOut for USARTPolledFunction {}
+
+/// USARTPeripheral
 
 // Put functionality here i.e various valid configurations for your peripheral
 pub struct USARTPeripheral<const B: u32> {}
 
 impl<const B: u32> USARTPeripheral<B> {
     pub fn configure_default_rx(&self) -> impl UsartIn {
-        self.configure(&USARTConfig {
+        Self::polled_configure(&USARTConfig {
             mode: USARTMode::RxOnly,
             word_length: USARTWordLength::Len8,
             stop_bit: USARTStopBit::Bit1_0,
@@ -144,7 +157,7 @@ impl<const B: u32> USARTPeripheral<B> {
     }
 
     pub fn configure_default_tx(&self) -> impl Write {
-        self.configure(&USARTConfig {
+        Self::polled_configure(&USARTConfig {
             mode: USARTMode::TxOnly,
             word_length: USARTWordLength::Len8,
             stop_bit: USARTStopBit::Bit1_0,
@@ -153,31 +166,19 @@ impl<const B: u32> USARTPeripheral<B> {
     }
 
     pub fn configure_default_rx_tx(&self) -> impl UsartInOut {
-        self.configure(&USARTConfig {
+        Self::polled_configure(&USARTConfig {
             mode: USARTMode::RxTx,
             word_length: USARTWordLength::Len8,
             stop_bit: USARTStopBit::Bit1_0,
             baud_rate: 115200,
         })
     }
-}
 
-pub struct USARTConfig {
-    mode: USARTMode,
-    word_length: USARTWordLength,
-    stop_bit: USARTStopBit,
-    baud_rate: u32,
-}
-
-impl<const B: u32> PeripheralConfiguration for USARTPeripheral<B> {
-    type Config = USARTConfig;
-    type Register = USARTRegister;
-
-    fn configure(&self, configuration: &Self::Config) -> Self::Register {
-        let mut usart = USARTRegister {
+    fn polled_configure(config: &USARTConfig) -> USARTPolledFunction {
+        let mut usart = USARTPolledFunction {
             port: get_port!(USART_TypeDef, B),
         };
-        usart.via_configure(&configuration);
+        usart.via_configure(&config);
         usart
     }
 }
