@@ -26,6 +26,7 @@ fn main() -> ! {
         sync::atomic::{AtomicBool, AtomicPtr, Ordering},
     };
     use l0::*;
+    use l2::heapless::spsc::Queue;
     use l3::*;
     use l4::*;
 
@@ -60,14 +61,20 @@ fn main() -> ! {
     }
 
     // GPIOB Pin 6, 7
-    fn configure_usart_rx_tx() -> impl UsartInOut {
+    fn configure_usart_rx_tx() -> impl UsartBufferedInOut {
         let gpiob_peripheral = GPIOB_GLOBAL.take();
         // Configure GPIOB port Pin 6 and Pin 7 for USART
         gpiob_peripheral.configure_for_usart(GPIOAlternate::AF7, 6);
         gpiob_peripheral.configure_for_usart(GPIOAlternate::AF7, 7);
 
-        let usart1_rx_tx = USART1_GLOBAL.take().configure_default_rx_tx();
+        let usart1_rx_tx = USART1_GLOBAL
+            .take()
+            .configure_buffered_rx_tx(unsafe { &mut RX_BUF }, unsafe { &mut TX_BUF });
         usart1_rx_tx
+    }
+
+    fn configure_usart_rx_tx_interrupt() {
+        nvic::enable_irq(Interrupt::USART1);
     }
 
     // Start
@@ -94,6 +101,36 @@ fn main() -> ! {
 
     // USART
     let mut usart1_rx_tx = configure_usart_rx_tx();
+    static mut RX_BUF: Queue<char, 128> = Queue::new();
+    static mut TX_BUF: Queue<char, 128> = Queue::new();
+    attach_interrupt_handler(Interrupt::USART1, || {
+        let usart1_port = USART1_PORT::port();
+        let isr_data = read_register!(usart1_port.ISR);
+        const RXNE: u32 = 5;
+        const TC: u32 = 6;
+        const TXE: u32 = 7;
+        const TXEIE: u32 = 7;
+        if (isr_data >> RXNE) & 0x01 == 1 {
+            // Read data
+            let rdr_data = read_register!(usart1_port.RDR) as u8 as char;
+            unsafe { RX_BUF.enqueue(rdr_data).unwrap() };
+        }
+
+        if (isr_data >> TXE) & 0x01 == 1 {
+            unsafe {
+                match TX_BUF.dequeue() {
+                    Some(data) => {
+                        write_register!(usart1_port.TDR, data as u16);
+                    }
+                    None => {
+                        // Reset the CR1 TXEIE register
+                        write_assign_register!(usart1_port.CR1, &, !(1 << TXEIE));
+                    }
+                }
+            };
+        }
+    });
+    configure_usart_rx_tx_interrupt();
 
     const TIME: u32 = 100_000;
     let mut counter = 0;
@@ -102,6 +139,12 @@ fn main() -> ! {
             BUTTON_PRESSED.compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
         {
             usart1_rx_tx.write_str("Button Pressed\r\n").unwrap();
+        }
+
+        if let Some(data) = usart1_rx_tx.try_read_character() {
+            usart1_rx_tx
+                .write_fmt(format_args!("W: {} {:#?}\r\n", data, data))
+                .unwrap();
         }
 
         // Can also use write! and writeln!
@@ -115,6 +158,7 @@ fn main() -> ! {
         usart1_rx_tx
             .write_fmt(format_args!("LED OFF: {}\r\n", counter))
             .unwrap();
+
         spin_delay(TIME);
         counter += 1;
     }
