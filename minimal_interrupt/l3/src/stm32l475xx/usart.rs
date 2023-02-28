@@ -146,8 +146,8 @@ impl UsartInOut for USARTPolledFunction {}
 
 pub struct USARTBufferedFunction {
     port: &'static mut USART_TypeDef,
-    rx: &'static mut Queue<char, 128>,
-    tx: &'static mut Queue<char, 128>,
+    rx: Option<&'static mut Queue<char, 128>>,
+    tx: Option<&'static mut Queue<char, 128>>,
 }
 
 impl USARTBufferedFunction {
@@ -205,16 +205,26 @@ impl USARTBufferedFunction {
 
 impl UsartBufferedIn for USARTBufferedFunction {
     fn size(&self) -> usize {
-        self.rx.len()
+        match &self.rx {
+            Some(rx) => rx.len(),
+            None => 0,
+        }
     }
 
     fn try_read_character(&mut self) -> Option<char> {
-        self.rx.dequeue()
+        match &mut self.rx {
+            Some(rx) => rx.dequeue(),
+            None => None,
+        }
     }
 }
 
 impl Write for USARTBufferedFunction {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        if let None = self.tx {
+            return Err(core::fmt::Error);
+        }
+
         let cr1_data = read_register!(self.port.CR1);
         const TXEIE: u32 = 7;
         let txeie = cr1_data >> TXEIE & 0x01 == 1;
@@ -225,9 +235,9 @@ impl Write for USARTBufferedFunction {
 
         // Fill the buffer
         s.chars().for_each(|d| {
-            self.tx.enqueue(d).unwrap();
+            self.tx.as_mut().unwrap().enqueue(d).unwrap();
         });
-        Ok(())
+        return Ok(());
     }
 }
 
@@ -274,11 +284,7 @@ impl<const B: u32> USARTPeripheral<B> {
         usart
     }
 
-    pub fn configure_buffered_rx(
-        &self,
-        rx: &'static mut Queue<char, 128>,
-        tx: &'static mut Queue<char, 128>,
-    ) -> impl UsartBufferedIn {
+    pub fn configure_buffered_rx(&self, rx: &'static mut Queue<char, 128>) -> impl UsartBufferedIn {
         Self::buffered_configure(
             &USARTConfig {
                 mode: USARTMode::RxTx,
@@ -286,8 +292,21 @@ impl<const B: u32> USARTPeripheral<B> {
                 stop_bit: USARTStopBit::Bit1_0,
                 baud_rate: 115200,
             },
-            rx,
-            tx,
+            Some(rx),
+            None,
+        )
+    }
+
+    pub fn configure_buffered_tx(&self, tx: &'static mut Queue<char, 128>) -> impl Write {
+        Self::buffered_configure(
+            &USARTConfig {
+                mode: USARTMode::RxTx,
+                word_length: USARTWordLength::Len8,
+                stop_bit: USARTStopBit::Bit1_0,
+                baud_rate: 115200,
+            },
+            None,
+            Some(tx),
         )
     }
 
@@ -303,15 +322,15 @@ impl<const B: u32> USARTPeripheral<B> {
                 stop_bit: USARTStopBit::Bit1_0,
                 baud_rate: 115200,
             },
-            rx,
-            tx,
+            Some(rx),
+            Some(tx),
         )
     }
 
     fn buffered_configure(
         config: &USARTConfig,
-        rx: &'static mut Queue<char, 128>,
-        tx: &'static mut Queue<char, 128>,
+        rx: Option<&'static mut Queue<char, 128>>,
+        tx: Option<&'static mut Queue<char, 128>>,
     ) -> USARTBufferedFunction {
         let mut usart = USARTBufferedFunction {
             port: get_port!(USART_TypeDef, B),
