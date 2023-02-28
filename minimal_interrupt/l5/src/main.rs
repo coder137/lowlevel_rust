@@ -26,7 +26,7 @@ fn main() -> ! {
         sync::atomic::{AtomicBool, AtomicPtr, Ordering},
     };
     use l0::*;
-    use l2::heapless::spsc::Queue;
+    use l2::heapless::{spsc::Queue, String, Vec};
     use l3::*;
     use l4::*;
 
@@ -134,6 +134,7 @@ fn main() -> ! {
 
     const TIME: u32 = 100_000;
     let mut counter = 0;
+    let mut line_buffer: String<50> = String::new();
     loop {
         if let Ok(_) =
             BUTTON_PRESSED.compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
@@ -141,10 +142,15 @@ fn main() -> ! {
             usart1_rx_tx.write_str("Button Pressed\r\n").unwrap();
         }
 
-        if let Some(data) = usart1_rx_tx.try_read_character() {
-            usart1_rx_tx
-                .write_fmt(format_args!("W: {} {:#?}\r\n", data, data))
-                .unwrap();
+        while let Some(data) = usart1_rx_tx.try_read_character() {
+            if data == '\r' || data == '\n' {
+                usart1_rx_tx
+                    .write_fmt(format_args!("W: {} {:#?}\r\n", line_buffer, line_buffer))
+                    .unwrap();
+                line_buffer.clear();
+            } else {
+                line_buffer.push(data).unwrap();
+            }
         }
 
         // Can also use write! and writeln!
