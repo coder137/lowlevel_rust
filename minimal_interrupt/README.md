@@ -1,23 +1,21 @@
-- [Minimal Drivers](#minimal-drivers)
+- [Minimal Interrupt](#minimal-interrupt)
   - [Links](#links)
   - [Microcontrollers layers](#microcontrollers-layers)
   - [Pre-requisites](#pre-requisites)
-  - [GPIO](#gpio)
 - [Changelog](#changelog)
-  - [L0 Layer - Controller](#l0-layer---controller)
-    - [Global](#global)
-    - [Utility](#utility)
-    - [STM32L475xx](#stm32l475xx)
-  - [L2 Layer - Utilities](#l2-layer---utilities)
-    - [Own implementation](#own-implementation)
-    - [Crates.io](#cratesio)
-  - [L3 Layer - Interfaces](#l3-layer---interfaces)
-    - [Rust interfaces used](#rust-interfaces-used)
-  - [L3 Layer - Drivers](#l3-layer---drivers)
-  - [L3 Layer - Miscellaneous](#l3-layer---miscellaneous)
-  - [L4 Sensor / Actuator](#l4-sensor--actuator)
+  - [L0 - Entry](#l0---entry)
+  - [L0 - Utility](#l0---utility)
+  - [L0 - Chip](#l0---chip)
+  - [L0 - Architecture](#l0---architecture)
+  - [L2 - Utility](#l2---utility)
+  - [L3 Improvements](#l3-improvements)
+    - [Hardware](#hardware)
+    - [Software](#software)
+  - [L3 - Interface](#l3---interface)
+  - [L3 - Driver](#l3---driver)
+  - [L5 - Application](#l5---application)
 
-# Minimal Drivers
+# Minimal Interrupt
 
 This code has been tested on
 
@@ -32,129 +30,92 @@ This code has been tested on
 ## Microcontrollers layers
 
 - L0 Lowlevel
-  - CMSIS
-  - Controller registers
-  - Startup
-  - Linker script
+  - Chip Interrupts
 - L1 RTOS
 - L2 Utility
-  - Bitflags
 - L3 Driver
-  - GPIO
-  - UART
+  - Interrupt support for GPIO and USART
 - L4 Sensor
 - L5 Application
-
-```
-application v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l5)
-├── l0 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l0)
-│   [build-dependencies]
-│   └── bindgen v0.63.0
-├── l3 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l3)
-│   ├── l0 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l0) (*)
-│   └── l2 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l2)
-└── l4 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l4)
-    └── l3 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l3) (*)
-
-l0 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l0) (*)
-
-l2 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l2) (*)
-
-l3 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l3) (*)
-
-l4 v0.1.0 (D:\Repositories\lowlevel_rust\minimal_drivers\l4) (*)
-```
-
-## Pre-requisites
-
-- Pre-requisites from `minimal_controller_peripheral`
-
-## GPIO
-
-- Module
-  - Functionality
-- Port
-  - Registers
-- Pin
+  - Interrupt usage
 
 ---
 
-- [GPIO Traits](https://github.com/mbr/gpio-rs)
+## Pre-requisites
+
+- Pre-requisites from `minimal_driver`
+
+# Changelog
+
+## L0 - Entry
+
+- Updated linker script to remove PROVIDE attributes
+- Updated entry point with a better EXCEPTIONS usage
+
+## L0 - Utility
+
+- Added `write_assign_register` macro
+
+## L0 - Chip
+
+- Updated `controller_init` with `SCB->VTOR = FLASH_BASE`
+- Added `attach_interrupt_handler` for STM32L475xx chip
+
+## L0 - Architecture
+
+- Added `nvic` module with `enable_irq` function
+  - NOTE, This has only been added since bindgen cannot parse `static inline` C functions
+
+
+## L2 - Utility
+
+- Added [heapless](https://crates.io/crates/heapless) library for stack based datastructures
+
+## L3 Improvements
+
+### Hardware
 
 ```mermaid
 graph BT;
   subgraph Port
-    GPIOA-H
+    USART1-3
     subgraph Peripheral
-      GPIO
+      USART
       subgraph Register
-        MODER
-        IDR
-        ODR
-        subgraph Pin
-          0-15
-        end
+        CR1
+        CR2
+        RDR
+        TDR
       end
     end
   end
 ```
-# Changelog
 
-## L0 Layer - Controller
+### Software
 
-### Global
+```mermaid
+graph BT;
+  subgraph Port
+    USART1-3
+    subgraph Peripheral
+      PolledUSART
+      BufferedUSART
+    end
+  end
+```
 
-- System Clock
-  - Every microcontroller will have a system clock in Hz
+## L3 - Interface
 
-### Utility
+- Removed `PeripheralConfiguration` trait
+- Added `UsartBufferedIn` and `UsartBufferedInOut` trait
 
-- Common macros for port and register access
-  - `get_port!`
-  - `read_register!`
-  - `write_register!`
+## L3 - Driver
 
-### STM32L475xx
+- Added `USARTBufferedFunction` functionality
+- Renamed to `USARTPolledFunction`
+- Renamed to `GPIOFunction`
 
-- Controller initialization
-  - For now it just updates the System Clock so that it can be used by upper layer (drivers etc)
+## L5 - Application
 
-## L2 Layer - Utilities
-
-### Own implementation
-
-### Crates.io
-
-- [Bitflags](https://github.com/bitflags/bitflags)
-
-## L3 Layer - Interfaces
-
-- GpioIn
-- GpioOut
-- UsartIn
-- UsartInOut
-
-### Rust interfaces used
-
-- Write
-  - Used instead of creating out own UsartOut interface
-
-## L3 Layer - Drivers
-
-- RCC
-- GPIO
-  - [x] Input
-  - [x] Output
-- USART
-  - [x] Read
-  - [x] Write
-
-## L3 Layer - Miscellaneous
-
-- Singleton
-  - Safe access to global ports
-
-## L4 Sensor / Actuator
-
-- Led
-- Button
+- Updated example with GPIO Input using interrupt and Atomics
+- Updated example with USART Buffered RX and TX using interrupts and static stack allocated lock free queues
