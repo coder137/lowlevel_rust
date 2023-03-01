@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::Singleton;
-use crate::{EnumToNum, GpioIn, GpioOut, GpioValue, PeripheralConfiguration};
+use crate::{EnumToNum, GpioIn, GpioOut, GpioValue};
 use l0::{
     get_port, read_register, write_register, GPIO_TypeDef, GPIOA_BASE, GPIOB_BASE, GPIOC_BASE,
     GPIOD_BASE, GPIOE_BASE, GPIOF_BASE, GPIOG_BASE, GPIOH_BASE,
@@ -115,12 +115,12 @@ impl EnumToNum for GPIOAlternate {
     }
 }
 
-pub struct GPIORegister {
+pub struct GPIOFunction {
     port: &'static mut GPIO_TypeDef,
     pin: u32,
 }
 
-impl GPIORegister {
+impl GPIOFunction {
     fn via_config(&mut self, config: &GPIOConfig) {
         self.set_moder(&config.moder);
         self.set_otyper(&config.otyper);
@@ -185,7 +185,7 @@ impl GPIORegister {
     }
 }
 
-impl GpioOut for GPIORegister {
+impl GpioOut for GPIOFunction {
     fn write(&mut self, value: GpioValue) {
         match value {
             GpioValue::Low => self.set_brr(),
@@ -194,7 +194,7 @@ impl GpioOut for GPIORegister {
     }
 }
 
-impl GpioIn for GPIORegister {
+impl GpioIn for GPIOFunction {
     fn read(&self) -> GpioValue {
         let idr = read_register!(self.port.IDR);
         let value = (idr >> self.pin) & 0x01;
@@ -220,7 +220,7 @@ impl<const B: u32> GPIOPeripheral<B> {
             ospeedr: GPIOSpeed::LowSpeed,
             afr: GPIOAlternate::AF0,
         };
-        self.configure(&config)
+        Self::configure(&config)
     }
 
     pub fn configure_for_input(&self, pin: u32) -> impl GpioIn {
@@ -232,10 +232,10 @@ impl<const B: u32> GPIOPeripheral<B> {
             ospeedr: GPIOSpeed::LowSpeed,
             afr: GPIOAlternate::AF0,
         };
-        self.configure(&config)
+        Self::configure(&config)
     }
 
-    pub fn configure_for_usart(&self, afr: GPIOAlternate, pin: u32) -> GPIORegister {
+    pub fn configure_for_usart(&self, afr: GPIOAlternate, pin: u32) -> GPIOFunction {
         let config = GPIOConfig {
             pin,
             moder: GPIOMode::AlternateFunction,
@@ -244,7 +244,16 @@ impl<const B: u32> GPIOPeripheral<B> {
             ospeedr: GPIOSpeed::VeryHighSpeed,
             afr,
         };
-        self.configure(&config)
+        Self::configure(&config)
+    }
+
+    pub fn configure(config: &GPIOConfig) -> GPIOFunction {
+        let mut gpio = GPIOFunction {
+            port: get_port!(GPIO_TypeDef, B),
+            pin: config.pin,
+        };
+        gpio.via_config(&config);
+        gpio
     }
 }
 
@@ -255,20 +264,6 @@ pub struct GPIOConfig {
     pupdr: GPIOPull,
     ospeedr: GPIOSpeed,
     afr: GPIOAlternate,
-}
-
-impl<const B: u32> PeripheralConfiguration for GPIOPeripheral<B> {
-    type Config = GPIOConfig;
-    type Register = GPIORegister;
-
-    fn configure(&self, configuration: &Self::Config) -> Self::Register {
-        let mut gpio = GPIORegister {
-            port: get_port!(GPIO_TypeDef, B),
-            pin: configuration.pin,
-        };
-        gpio.via_config(&configuration);
-        gpio
-    }
 }
 
 // Create established ports here

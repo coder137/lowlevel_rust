@@ -1,6 +1,3 @@
-pub mod generic_interface;
-pub use generic_interface::*;
-
 pub mod gpio_interface;
 pub use gpio_interface::*;
 
