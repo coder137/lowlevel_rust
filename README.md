@@ -20,8 +20,17 @@ Rust on microcontrollers
   - Added **led** and **button** modules in `l4`
 - Minimal Interrupt
   - Configure interrupts from high level application code
+  - Updated `l0` `l2`, `l3` and `l4` workspace layers
+  - Updated `l0` with user interrupt considerations
+  - Added **heapless** library to `l2`
+  - Added USART buffered traits to `l3`
 
 # Roadmap
+
+## Libraries
+
+- [Bitflags](https://crates.io/crates/bitflags): Rust macros to generate bitflags
+- [Heapless](https://crates.io/crates/heapless): Stack allocated data structures
 
 ## RTOS
 
