@@ -33,6 +33,7 @@ This code has been tested on
   - Chip Interrupts
 - L1 RTOS
 - L2 Utility
+  - Heapless library
 - L3 Driver
   - Interrupt support for GPIO and USART
 - L4 Sensor
