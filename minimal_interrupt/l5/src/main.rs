@@ -90,24 +90,26 @@ fn main() -> ! {
     // Button module
     static BUTTON_PRESSED: AtomicBool = AtomicBool::new(false);
     configure_gpio_input();
-    attach_interrupt_handler(Interrupt::EXTI15_10, || {
+    #[no_mangle]
+    extern "C" fn EXTI15_10_Interrupt_Handler() {
         let mut exti_register = EXTI::get_register();
         if exti_register.is_pending_interrupt(13) {
             exti_register.clear_pending_interrupt(13);
             BUTTON_PRESSED.store(true, Ordering::SeqCst);
         }
-    });
+    }
     configure_gpio_input_interrupt();
 
     // USART
     let mut usart1_rx_tx = configure_usart_rx_tx();
     static mut RX_BUF: Queue<char, 128> = Queue::new();
     static mut TX_BUF: Queue<char, 128> = Queue::new();
-    attach_interrupt_handler(Interrupt::USART1, || {
+    #[no_mangle]
+    extern "C" fn USART1_Interrupt_Handler() {
         let usart1_port = USART1_PORT::port();
         let isr_data = read_register!(usart1_port.ISR);
         const RXNE: u32 = 5;
-        const TC: u32 = 6;
+        // const TC: u32 = 6;
         const TXE: u32 = 7;
         const TXEIE: u32 = 7;
         if (isr_data >> RXNE) & 0x01 == 1 {
@@ -129,7 +131,7 @@ fn main() -> ! {
                 }
             };
         }
-    });
+    }
     configure_usart_rx_tx_interrupt();
 
     const TIME: u32 = 100_000;
