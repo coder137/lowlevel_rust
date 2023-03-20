@@ -23,10 +23,10 @@ fn main() -> ! {
     use core::{
         fmt::Write,
         ptr,
-        sync::atomic::{AtomicBool, AtomicPtr, Ordering},
+        sync::atomic::{AtomicBool, Ordering},
     };
     use l0::*;
-    use l2::heapless::{spsc::Queue, String, Vec};
+    use l2::heapless::spsc::Queue;
     use l3::*;
     use l4::*;
 
@@ -102,8 +102,11 @@ fn main() -> ! {
 
     // USART
     let mut usart1_rx_tx = configure_usart_rx_tx();
-    static mut RX_BUF: Queue<char, 128> = Queue::new();
-    static mut TX_BUF: Queue<char, 128> = Queue::new();
+    // NOTE, Queue implementation is very heavy
+    // Uses 4 bytes per character
+    static mut RX_BUF: Queue<char, 64> = Queue::new();
+    static mut TX_BUF: Queue<char, 64> = Queue::new();
+    static IS_NEWLINE: AtomicBool = AtomicBool::new(false);
     #[no_mangle]
     extern "C" fn USART1_Interrupt_Handler() {
         let usart1_port = USART1_PORT::port();
@@ -115,6 +118,9 @@ fn main() -> ! {
         if (isr_data >> RXNE) & 0x01 == 1 {
             // Read data
             let rdr_data = read_register!(usart1_port.RDR) as u8 as char;
+            if rdr_data == '\n' || rdr_data == '\r' {
+                IS_NEWLINE.store(true, Ordering::SeqCst);
+            }
             unsafe { RX_BUF.enqueue(rdr_data).unwrap() };
         }
 
@@ -135,40 +141,23 @@ fn main() -> ! {
     configure_usart_rx_tx_interrupt();
 
     const TIME: u32 = 100_000;
-    let mut counter = 0;
-    let mut line_buffer: String<50> = String::new();
     loop {
-        if let Ok(_) =
-            BUTTON_PRESSED.compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
-        {
-            usart1_rx_tx.write_str("Button Pressed\r\n").unwrap();
+        if BUTTON_PRESSED.load(Ordering::SeqCst) {
+            led.on();
+            spin_delay(TIME);
+            led.off();
+            BUTTON_PRESSED.store(false, Ordering::SeqCst);
         }
 
-        while let Some(data) = usart1_rx_tx.try_read_character() {
-            if data == '\r' || data == '\n' {
-                usart1_rx_tx
-                    .write_fmt(format_args!("W: {} {:#?}\r\n", line_buffer, line_buffer))
-                    .unwrap();
-                line_buffer.clear();
-            } else {
-                line_buffer.push(data).unwrap();
+        if IS_NEWLINE.load(Ordering::SeqCst) {
+            usart1_rx_tx.write_str("Printing\r\n").unwrap();
+            while usart1_rx_tx.size() != 0 {
+                let c = usart1_rx_tx.try_read_character().unwrap();
+                usart1_rx_tx.write_char(c).unwrap();
             }
+            usart1_rx_tx.write_str("\r\n").unwrap();
+            IS_NEWLINE.store(false, Ordering::SeqCst);
         }
-
-        // Can also use write! and writeln!
-        led.on();
-        usart1_rx_tx
-            .write_fmt(format_args!("LED ON: {}\r\n", counter))
-            .unwrap();
-        spin_delay(TIME);
-
-        led.off();
-        usart1_rx_tx
-            .write_fmt(format_args!("LED OFF: {}\r\n", counter))
-            .unwrap();
-
-        spin_delay(TIME);
-        counter += 1;
     }
 }
 
