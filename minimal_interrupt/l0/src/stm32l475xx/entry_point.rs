@@ -43,7 +43,15 @@ pub unsafe extern "C" fn Reset() {
 }
 
 extern "C" {
-    fn __StackTop();
+    fn __StackTop(); // Check `gcc_arm.ld`
+    fn NMI();
+    fn HardFault();
+    fn MemManage();
+    fn BusFault();
+    fn UsageFault();
+    fn SVCall();
+    fn PendSV();
+    fn SysTick();
 }
 
 #[repr(C)]
@@ -59,38 +67,22 @@ pub static EXCEPTIONS: [Vector; 16] = [
         handler: __StackTop,
     },
     Vector { handler: Reset },
+    Vector { handler: NMI },
+    Vector { handler: HardFault },
+    Vector { handler: MemManage },
+    Vector { handler: BusFault },
     Vector {
-        handler: DefaultExceptionHandler,
-    }, // NMI
-    Vector {
-        handler: DefaultExceptionHandler,
-    }, // HardFault
-    Vector {
-        handler: DefaultExceptionHandler,
-    }, // MemManage
-    Vector {
-        handler: DefaultExceptionHandler,
-    }, // BusFault
-    Vector {
-        handler: DefaultExceptionHandler,
-    }, // UsageFault
+        handler: UsageFault,
+    },
     Vector { reserved: 0 },
     Vector { reserved: 0 },
     Vector { reserved: 0 },
     Vector { reserved: 0 },
-    Vector {
-        handler: DefaultExceptionHandler,
-    }, // SVCall
-    Vector {
-        handler: DefaultExceptionHandler,
-    }, // Debug
+    Vector { handler: SVCall },
+    Vector { reserved: 0 }, // Debug Monitor Handler comes here
     Vector { reserved: 0 },
-    Vector {
-        handler: DefaultExceptionHandler,
-    }, // PendSV
-    Vector {
-        handler: DefaultExceptionHandler,
-    }, // SysTick
+    Vector { handler: PendSV },
+    Vector { handler: SysTick },
 ];
 
 #[no_mangle]
