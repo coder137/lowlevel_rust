@@ -6,6 +6,8 @@ use core::{
     task::{Context, Poll, RawWaker, RawWakerVTable, Waker},
 };
 
+pub mod simple_executor;
+
 static VTABLE: RawWakerVTable = {
     unsafe fn clone(p: *const ()) -> RawWaker {
         RawWaker::new(p, &VTABLE)
@@ -61,19 +63,6 @@ pub mod poll {
                 return;
             }
             self.poll();
-        }
-    }
-
-    // Run one async task till completion
-    // Blocks the current thread and no other concurrent operations takes place till this future is resolved
-    pub fn block_task(future: impl Future<Output = ()>) {
-        let future = pin!(future);
-        let mut task = AsyncTask::new(future);
-        loop {
-            task.poll();
-            if task.ready {
-                break;
-            }
         }
     }
 
@@ -160,6 +149,8 @@ pub mod poll {
 
     #[cfg(test)]
     mod tests {
+        use crate::simple_executor::block_on;
+
         use super::*;
         use core::cell::Cell;
 
@@ -185,7 +176,7 @@ pub mod poll {
                 println!("F3: Ended");
             });
 
-            block_task(async {
+            block_on(async {
                 join_tasks([AsyncTask::new(f1), AsyncTask::new(f2), AsyncTask::new(f3)]).await;
             });
 
