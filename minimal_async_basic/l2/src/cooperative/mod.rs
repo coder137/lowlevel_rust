@@ -1,6 +1,6 @@
 use core::{
     future::Future,
-    pin::{pin, Pin},
+    pin::Pin,
     ptr,
     sync::atomic::AtomicBool,
     task::{Context, Poll, RawWaker, RawWakerVTable, Waker},
@@ -149,10 +149,10 @@ pub mod poll {
 
     #[cfg(test)]
     mod tests {
-        use crate::simple_executor::block_on;
-
         use super::*;
+        use crate::simple_executor::block_on;
         use core::cell::Cell;
+        use core::pin::pin;
 
         #[test]
         fn join_task_test() {
