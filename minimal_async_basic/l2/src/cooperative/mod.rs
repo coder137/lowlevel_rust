@@ -158,5 +158,38 @@ pub mod poll {
         }
     }
 
-    // unsafe impl<T> Send for AsyncMutex<T> {}
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use core::cell::Cell;
+
+        #[test]
+        fn join_task_test() {
+            let success = Cell::new(false);
+
+            let f1 = pin!(async {
+                println!("F1: Started");
+                wait(|| success.get()).await;
+                println!("F1: Ended");
+            });
+
+            let f2 = pin!(async {
+                println!("F2: Setting true");
+                success.set(true);
+                println!("F2: Ended");
+            });
+
+            let f3 = pin!(async {
+                println!("F3: Started");
+                wait(|| success.get()).await;
+                println!("F3: Ended");
+            });
+
+            block_task(async {
+                join_tasks([AsyncTask::new(f1), AsyncTask::new(f2), AsyncTask::new(f3)]).await;
+            });
+
+            // assert_eq!(true, false);
+        }
+    }
 }
