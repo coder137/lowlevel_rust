@@ -22,11 +22,15 @@ pub fn spin_delay(delay: u32) {
 fn main() -> ! {
     use core::{
         fmt::Write,
+        pin::pin,
         ptr,
         sync::atomic::{AtomicBool, Ordering},
     };
     use l0::*;
-    use l2::heapless::spsc::Queue;
+    use l2::{
+        heapless::spsc::Queue,
+        poll::{block_task, join_tasks, wait, AsyncMutex, AsyncTask},
+    };
     use l3::*;
     use l4::*;
 
@@ -44,20 +48,6 @@ fn main() -> ! {
         // Configure GPIOC port and Pin 13 as input
         let gpio_in_at_pin13 = gpioc_peripheral.configure_for_input(13);
         gpio_in_at_pin13
-    }
-
-    // GPIOC Pin 13, Interrupt activation
-    fn configure_gpio_input_interrupt() {
-        // Configure SYSCFG port for pin 13
-        // Select the GPIO pin which triggers this Interrupt
-        let syscfg_port = SYSCFG_PORT::port();
-        write_assign_register!(syscfg_port.EXTICR[3], |, (1 << 1) << 4);
-
-        // Configure EXTI register for pin 13
-        EXTI::get_register().configure_interrupt(13, EXTIType::FallingEdge);
-
-        // Enable NVIC IRQ
-        nvic::enable_irq(Interrupt::EXTI15_10);
     }
 
     // GPIOB Pin 6, 7
@@ -89,19 +79,12 @@ fn main() -> ! {
 
     // Button module
     static BUTTON_PRESSED: AtomicBool = AtomicBool::new(false);
-    configure_gpio_input();
-    #[no_mangle]
-    extern "C" fn EXTI15_10_Interrupt_Handler() {
-        let mut exti_register = EXTI::get_register();
-        if exti_register.is_pending_interrupt(13) {
-            exti_register.clear_pending_interrupt(13);
-            BUTTON_PRESSED.store(true, Ordering::SeqCst);
-        }
-    }
-    configure_gpio_input_interrupt();
+    let gpio_in = configure_gpio_input();
+    let button = Button::new(&gpio_in, GpioValue::High);
 
     // USART
-    let mut usart1_rx_tx = configure_usart_rx_tx();
+    let usart1_rx_tx = AsyncMutex::new(configure_usart_rx_tx());
+
     // NOTE, Queue implementation is very heavy
     // Uses 4 bytes per character
     static mut RX_BUF: Queue<char, 64> = Queue::new();
@@ -140,6 +123,47 @@ fn main() -> ! {
     }
     configure_usart_rx_tx_interrupt();
 
+    // Async task here
+    let async_button_press = pin!(async {
+        let mut counter = 0;
+        loop {
+            // Wait for button to be pressed
+            wait(|| button.pressed()).await;
+
+            let mut serial = usart1_rx_tx.lock().await;
+            serial
+                .write_fmt(format_args!("Button {counter}\r\n"))
+                .unwrap();
+            counter += 1;
+
+            // Wait for button to be released
+            wait(|| !button.pressed()).await;
+        }
+    });
+
+    let async_newline_recv = pin!(async {
+        loop {
+            wait(|| IS_NEWLINE.load(Ordering::SeqCst)).await;
+            let mut serial = usart1_rx_tx.lock().await;
+
+            serial.write_str("Printing\r\n").unwrap();
+            while serial.size() != 0 {
+                let c = serial.try_read_character().unwrap();
+                serial.write_char(c).unwrap();
+            }
+            serial.write_str("\r\n").unwrap();
+            IS_NEWLINE.store(false, Ordering::SeqCst);
+        }
+    });
+
+    block_task(async {
+        join_tasks([
+            AsyncTask::new(async_button_press),
+            AsyncTask::new(async_newline_recv),
+        ])
+        .await;
+    });
+
     const TIME: u32 = 100_000;
     loop {
         if BUTTON_PRESSED.load(Ordering::SeqCst) {
@@ -147,16 +171,6 @@ fn main() -> ! {
             spin_delay(TIME);
             led.off();
             BUTTON_PRESSED.store(false, Ordering::SeqCst);
-        }
-
-        if IS_NEWLINE.load(Ordering::SeqCst) {
-            usart1_rx_tx.write_str("Printing\r\n").unwrap();
-            while usart1_rx_tx.size() != 0 {
-                let c = usart1_rx_tx.try_read_character().unwrap();
-                usart1_rx_tx.write_char(c).unwrap();
-            }
-            usart1_rx_tx.write_str("\r\n").unwrap();
-            IS_NEWLINE.store(false, Ordering::SeqCst);
         }
     }
 }
