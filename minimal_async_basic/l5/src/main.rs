@@ -29,7 +29,8 @@ fn main() -> ! {
     use l0::*;
     use l2::{
         heapless::spsc::Queue,
-        poll::{block_task, join_tasks, wait, AsyncMutex, AsyncTask},
+        poll::{join_tasks, wait, AsyncMutex, AsyncTask},
+        simple_executor::block_on,
     };
     use l3::*;
     use l4::*;
@@ -156,7 +157,7 @@ fn main() -> ! {
         }
     });
 
-    block_task(async {
+    block_on(async {
         join_tasks([
             AsyncTask::new(async_button_press),
             AsyncTask::new(async_newline_recv),
