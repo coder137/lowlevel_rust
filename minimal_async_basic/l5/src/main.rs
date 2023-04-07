@@ -21,7 +21,6 @@ pub fn spin_delay(delay: u32) {
 #[no_mangle]
 fn main() -> ! {
     use core::{
-        arch::asm,
         fmt::Write,
         ops::Add,
         pin::pin,
@@ -30,7 +29,10 @@ fn main() -> ! {
         time::Duration,
     };
     use l0::*;
-    use l2::{block_on, heapless::spsc::Queue, join_tasks, wait, AsyncMutex, AsyncTask};
+    use l2::{
+        block_on, heapless::spsc::Queue, join_tasks, sleep_via_timer, sleep_via_wait, wait,
+        AsyncMutex, AsyncTask,
+    };
     use l3::*;
     use l4::*;
 
@@ -127,6 +129,8 @@ fn main() -> ! {
     let async_button_press = async {
         let mut counter = 0;
         loop {
+            // Wait for button to be released
+            wait(|| !button.pressed()).await;
             // Wait for button to be pressed
             wait(|| button.pressed()).await;
             let mut serial = usart1_rx_tx.lock().await;
@@ -135,9 +139,6 @@ fn main() -> ! {
                 .write_fmt(format_args!("Button {counter} {:?}\r\n", current_time))
                 .unwrap();
             counter += 1;
-
-            // Wait for button to be released
-            wait(|| !button.pressed()).await;
         }
     };
 
@@ -157,19 +158,14 @@ fn main() -> ! {
     };
 
     let async_print_time = async {
-        let mut previous_time = get_current_time();
         loop {
-            let wakeup_time = previous_time.add(Duration::from_secs(1));
-            wait(|| wakeup_time <= get_current_time()).await;
-
+            sleep_via_timer(Duration::from_millis(1000)).await;
+            let current_time = get_current_time();
             let mut serial = usart1_rx_tx.lock().await;
 
-            let current_time = get_current_time();
             serial
                 .write_fmt(format_args!("Time: {:?}\r\n", current_time))
                 .unwrap();
-
-            previous_time = current_time;
         }
     };
 
