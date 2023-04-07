@@ -28,14 +28,6 @@ impl<'a> AsyncTask<'a> {
         let mut context = Context::from_waker(&waker);
         self.ready = self.future.as_mut().poll(&mut context).is_ready();
     }
-
-    // Can keep polling a future without any side effects
-    fn safe_poll(&mut self) {
-        if self.ready {
-            return;
-        }
-        self.poll();
-    }
 }
 
 // Join async tasks so that they can run concurrently
