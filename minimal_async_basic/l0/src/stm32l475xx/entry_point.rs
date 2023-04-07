@@ -1,4 +1,6 @@
-use crate::chip::controller_init;
+use core::{ops::Add, time::Duration};
+
+use crate::{chip::controller_init, global::SYSTEM_TIME};
 
 // NOTE, All the externed modules come here
 #[no_mangle]
@@ -51,7 +53,6 @@ extern "C" {
     fn UsageFault();
     fn SVCall();
     fn PendSV();
-    fn SysTick();
 }
 
 #[repr(C)]
@@ -84,6 +85,12 @@ pub static EXCEPTIONS: [Vector; 16] = [
     Vector { handler: PendSV },
     Vector { handler: SysTick },
 ];
+
+// SysTick interrupt
+#[no_mangle]
+unsafe extern "C" fn SysTick() {
+    SYSTEM_TIME = SYSTEM_TIME.add(Duration::from_millis(1));
+}
 
 #[no_mangle]
 pub extern "C" fn DefaultExceptionHandler() {

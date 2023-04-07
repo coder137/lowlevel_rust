@@ -1,5 +1,8 @@
 #![cfg_attr(not(test), no_std)]
 
+#[cfg(any(target_family = "windows", target_family = "unix"))]
+extern crate std;
+
 // * Private to l0
 mod global; // Testable
 
@@ -20,4 +23,4 @@ pub use utility::*;
 #[cfg(all(target_arch = "arm", target_os = "none"))]
 pub use chip::public::*;
 
-pub use global::get_system_clock;
+pub use global::{get_current_time, get_system_clock};
