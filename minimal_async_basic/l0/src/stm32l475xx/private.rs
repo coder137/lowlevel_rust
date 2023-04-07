@@ -1,4 +1,7 @@
-use crate::{global::SYSTEM_CLOCK, read_register, write_register, FLASH_BASE, RCC_PORT, SCB_PORT};
+use crate::{
+    global::SYSTEM_CLOCK, read_register, write_assign_register, write_register, FLASH_BASE,
+    RCC_PORT, SCB_PORT, SYSTICK_PORT,
+};
 use core::sync::atomic::Ordering;
 
 pub fn controller_init() {
@@ -26,4 +29,21 @@ pub fn controller_init() {
     // Set SCB VTOR
     let scb_port = SCB_PORT::port();
     write_register!(scb_port.VTOR, FLASH_BASE);
+
+    // Configure SysTick
+    configure_systick_for_1ms(system_clock);
+}
+
+// 1ms <- More realistic
+// 1us <- Extremely granular
+fn configure_systick_for_1ms(systemclock: u32) {
+    let systick_port = SYSTICK_PORT::port();
+    // 1second -> systemclock cycles
+    // 1ms -> systemclock / 1000 - 1 cycles;
+    write_register!(systick_port.LOAD, (systemclock / 1000) - 1);
+
+    const CTRL_ENABLE: u32 = 0;
+    const CTRL_TICKINT: u32 = 1;
+    const CTRL_CLKSOURCE: u32 = 2;
+    write_assign_register!(systick_port.CTRL, |, (1 << CTRL_CLKSOURCE) | (1 << CTRL_TICKINT) | (1 << CTRL_ENABLE));
 }
