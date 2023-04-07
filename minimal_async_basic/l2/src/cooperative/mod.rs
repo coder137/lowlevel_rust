@@ -6,6 +6,11 @@ use core::{
 mod async_mutex;
 pub use async_mutex::*;
 
+#[cfg(all(target_arch = "arm", target_os = "none"))]
+mod async_timer;
+#[cfg(all(target_arch = "arm", target_os = "none"))]
+pub use async_timer::*;
+
 mod async_task;
 pub use async_task::*;
 
