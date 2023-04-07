@@ -33,6 +33,13 @@ openocd -f board/stm32l4discovery.cfg -c "program ${OUTPUT} verify reset exit"
 '''
 dependencies = ["build_debug"]
 
+[tasks.flash_release]
+script_runner = "@shell"
+script = '''
+openocd -f board/stm32l4discovery.cfg -c "program ${OUTPUT} verify reset exit"
+'''
+dependencies = ["build_release"]
+
 [tasks.ci_debug]
 dependencies = [
     "build_debug",
