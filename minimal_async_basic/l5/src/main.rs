@@ -4,20 +4,6 @@
 
 #[cfg(not(test))]
 #[cfg(all(target_arch = "arm", target_os = "none"))]
-pub fn spin_delay(delay: u32) {
-    use core::arch::asm;
-
-    let mut mdelay = delay;
-    while mdelay != 0 {
-        unsafe {
-            asm!("nop");
-        }
-        mdelay -= 1;
-    }
-}
-
-#[cfg(not(test))]
-#[cfg(all(target_arch = "arm", target_os = "none"))]
 #[no_mangle]
 fn main() -> ! {
     use core::{
@@ -80,7 +66,6 @@ fn main() -> ! {
     let mut led = Led::new(&mut gpio_output);
 
     // Button module
-    static BUTTON_PRESSED: AtomicBool = AtomicBool::new(false);
     let gpio_in = configure_gpio_input();
     let button = Button::new(&gpio_in, GpioValue::High);
 
@@ -125,7 +110,7 @@ fn main() -> ! {
     }
     configure_usart_rx_tx_interrupt();
 
-    // Async task here
+    // Async tasks here
     let async_button_press = async {
         let mut counter = 0;
         loop {
@@ -169,30 +154,30 @@ fn main() -> ! {
         }
     };
 
+    let async_blink_led = async {
+        loop {
+            led.on();
+            sleep_via_timer(Duration::from_millis(1000)).await;
+            led.off();
+            sleep_via_timer(Duration::from_millis(1000)).await;
+        }
+    };
+
     let async_button_press = pin!(async_button_press);
     let async_newline_recv = pin!(async_newline_recv);
     let async_print_time = pin!(async_print_time);
+    let async_blink_led = pin!(async_blink_led);
 
     block_on(async {
         join_tasks([
             AsyncTask::new(async_button_press),
             AsyncTask::new(async_newline_recv),
             AsyncTask::new(async_print_time),
+            AsyncTask::new(async_blink_led),
         ])
         .await;
     });
-
-    // TODO, Remove this
-    // TODO, Add time based apis based on Systick
-    const TIME: u32 = 100_000;
-    loop {
-        if BUTTON_PRESSED.load(Ordering::SeqCst) {
-            led.on();
-            spin_delay(TIME);
-            led.off();
-            BUTTON_PRESSED.store(false, Ordering::SeqCst);
-        }
-    }
+    unreachable!();
 }
 
 #[cfg(test)]
