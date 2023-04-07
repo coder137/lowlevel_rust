@@ -21,17 +21,16 @@ pub fn spin_delay(delay: u32) {
 #[no_mangle]
 fn main() -> ! {
     use core::{
+        arch::asm,
         fmt::Write,
+        ops::Add,
         pin::pin,
         ptr,
         sync::atomic::{AtomicBool, Ordering},
+        time::Duration,
     };
     use l0::*;
-    use l2::{
-        heapless::spsc::Queue,
-        poll::{join_tasks, wait, AsyncMutex, AsyncTask},
-        simple_executor::block_on,
-    };
+    use l2::{block_on, heapless::spsc::Queue, join_tasks, wait, AsyncMutex, AsyncTask};
     use l3::*;
     use l4::*;
 
@@ -125,24 +124,24 @@ fn main() -> ! {
     configure_usart_rx_tx_interrupt();
 
     // Async task here
-    let async_button_press = pin!(async {
+    let async_button_press = async {
         let mut counter = 0;
         loop {
             // Wait for button to be pressed
             wait(|| button.pressed()).await;
-
             let mut serial = usart1_rx_tx.lock().await;
+            let current_time = get_current_time();
             serial
-                .write_fmt(format_args!("Button {counter}\r\n"))
+                .write_fmt(format_args!("Button {counter} {:?}\r\n", current_time))
                 .unwrap();
             counter += 1;
 
             // Wait for button to be released
             wait(|| !button.pressed()).await;
         }
-    });
+    };
 
-    let async_newline_recv = pin!(async {
+    let async_newline_recv = async {
         loop {
             wait(|| IS_NEWLINE.load(Ordering::SeqCst)).await;
             let mut serial = usart1_rx_tx.lock().await;
@@ -155,16 +154,40 @@ fn main() -> ! {
             serial.write_str("\r\n").unwrap();
             IS_NEWLINE.store(false, Ordering::SeqCst);
         }
-    });
+    };
+
+    let async_print_time = async {
+        let mut previous_time = get_current_time();
+        loop {
+            let wakeup_time = previous_time.add(Duration::from_secs(1));
+            wait(|| wakeup_time <= get_current_time()).await;
+
+            let mut serial = usart1_rx_tx.lock().await;
+
+            let current_time = get_current_time();
+            serial
+                .write_fmt(format_args!("Time: {:?}\r\n", current_time))
+                .unwrap();
+
+            previous_time = current_time;
+        }
+    };
+
+    let async_button_press = pin!(async_button_press);
+    let async_newline_recv = pin!(async_newline_recv);
+    let async_print_time = pin!(async_print_time);
 
     block_on(async {
         join_tasks([
             AsyncTask::new(async_button_press),
             AsyncTask::new(async_newline_recv),
+            AsyncTask::new(async_print_time),
         ])
         .await;
     });
 
+    // TODO, Remove this
+    // TODO, Add time based apis based on Systick
     const TIME: u32 = 100_000;
     loop {
         if BUTTON_PRESSED.load(Ordering::SeqCst) {
