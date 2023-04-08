@@ -9,6 +9,7 @@ use l0::get_current_time;
 
 use crate::{wait, wait_and_return};
 
+#[derive(Debug, PartialEq)]
 pub enum WaitUntilReason {
     DataReady,
     Timeout,
@@ -73,7 +74,7 @@ mod tests {
     use core::time::Duration;
     use std::time::Instant;
 
-    use crate::{block_on, sleep_via_timer, sleep_via_wait};
+    use crate::{block_on, sleep_via_timer, sleep_via_wait, wait_until, WaitUntilReason};
 
     #[test]
     fn sleep_via_wait_test() {
@@ -95,5 +96,31 @@ mod tests {
         block_on(async_timer_cb);
         let duration = instant.elapsed();
         assert!(duration.as_secs() >= 1);
+    }
+
+    #[test]
+    fn wait_until_timeout_test() {
+        let async_sleep_until_cb = async {
+            let reason = wait_until(|| false, Duration::from_secs(1)).await;
+            assert_eq!(reason, WaitUntilReason::Timeout);
+        };
+
+        let instant = Instant::now();
+        block_on(async_sleep_until_cb);
+        let duration = instant.elapsed();
+        assert!(duration.as_secs() >= 1);
+    }
+
+    #[test]
+    fn wait_until_dataready_test() {
+        let async_sleep_until_cb = async {
+            let reason = wait_until(|| true, Duration::from_secs(1)).await;
+            assert_eq!(reason, WaitUntilReason::DataReady);
+        };
+
+        let instant = Instant::now();
+        block_on(async_sleep_until_cb);
+        let duration = instant.elapsed();
+        assert!(duration.as_secs() < 1);
     }
 }
