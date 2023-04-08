@@ -1,9 +1,7 @@
 use core::{future::Future, task::Poll};
 
 pub fn wait(ready: impl Fn() -> bool) -> impl Future<Output = ()> {
-    Wait {
-        ready: move || (Some(()), ready()),
-    }
+    wait_and_return(move || (Some(()), ready()))
 }
 
 pub fn wait_and_return<T>(ready: impl Fn() -> (Option<T>, bool)) -> impl Future<Output = T> {
