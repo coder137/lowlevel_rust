@@ -27,7 +27,7 @@ impl AsyncTimer {
     fn new(wait_duration: Duration) -> Self {
         Self {
             wait_duration,
-            start_time: get_current_time(), // TODO, Create an Instant API
+            start_time: get_current_time(),
         }
     }
 }
@@ -44,5 +44,35 @@ impl Future for AsyncTimer {
         } else {
             Poll::Pending
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use core::time::Duration;
+    use std::time::Instant;
+
+    use crate::{block_on, sleep_via_timer, sleep_via_wait};
+
+    #[test]
+    fn sleep_via_wait_test() {
+        let async_timer_cb = async {
+            sleep_via_wait(Duration::from_secs(1)).await;
+        };
+        let instant = Instant::now();
+        block_on(async_timer_cb);
+        let duration = instant.elapsed();
+        assert!(duration.as_secs() >= 1);
+    }
+
+    #[test]
+    fn sleep_via_timer_test() {
+        let async_timer_cb = async {
+            sleep_via_timer(Duration::from_secs(1)).await;
+        };
+        let instant = Instant::now();
+        block_on(async_timer_cb);
+        let duration = instant.elapsed();
+        assert!(duration.as_secs() >= 1);
     }
 }
