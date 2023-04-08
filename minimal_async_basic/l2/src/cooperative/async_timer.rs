@@ -7,7 +7,28 @@ use core::{
 
 use l0::get_current_time;
 
-use crate::wait;
+use crate::{wait, wait_and_return};
+
+pub enum WaitUntilReason {
+    DataReady,
+    Timeout,
+}
+
+pub fn wait_until<F: Fn() -> bool>(
+    ready: F,
+    timeout: Duration,
+) -> impl Future<Output = WaitUntilReason> {
+    let timeout_time = get_current_time().add(timeout);
+    wait_and_return(move || {
+        if ready() {
+            (Some(WaitUntilReason::DataReady), true)
+        } else if get_current_time() >= timeout_time {
+            (Some(WaitUntilReason::Timeout), true)
+        } else {
+            (None, false)
+        }
+    })
+}
 
 pub fn sleep_via_wait(wait_duration: Duration) -> impl Future<Output = ()> {
     let wakeup_time = get_current_time().add(wait_duration);
