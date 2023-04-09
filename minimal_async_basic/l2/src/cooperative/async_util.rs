@@ -13,7 +13,6 @@ struct Wait<T, F: Fn() -> (Option<T>, bool)> {
 }
 
 impl<T, F: Fn() -> (Option<T>, bool)> Future for Wait<T, F> {
-    // TODO, Make this return data of a particular type
     type Output = T;
 
     fn poll(
