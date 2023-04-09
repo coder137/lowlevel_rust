@@ -40,3 +40,12 @@ static VTABLE: RawWakerVTable = {
     }
     RawWakerVTable::new(clone, wake, wake_by_ref, drop)
 };
+
+// TODO, Needs AsyncQueue implementation with Producer and Consumer implementation
+// TODO, AsyncSPSC -> Simple producer/consumer processing queues
+// TODO, AsyncSPMC -> Triggering events
+// TODO, AsyncMPSC -> Writing data to console
+// TODO, AsyncMPMC -> Interrupts
+
+// ^
+// TODO, Needs AsyncSemaphore implementation (should use AsyncQueue under the hood)
