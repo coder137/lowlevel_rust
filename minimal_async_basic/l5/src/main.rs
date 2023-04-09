@@ -114,30 +114,35 @@ fn main() -> ! {
     let async_button_press = async {
         let mut counter = 0;
         loop {
-            // Wait for button to be released
-            wait(|| !button.pressed()).await;
             // Wait for button to be pressed
             wait(|| button.pressed()).await;
-            let mut serial = usart1_rx_tx.lock().await;
-            let current_time = get_current_time();
-            serial
-                .write_fmt(format_args!("Button {counter} {:?}\r\n", current_time))
-                .unwrap();
+
+            usart1_rx_tx.lock().await.action(|mut serial| {
+                let current_time = get_current_time();
+                serial
+                    .write_fmt(format_args!("Button {counter} {:?}\r\n", current_time))
+                    .unwrap();
+            });
             counter += 1;
+
+            // Wait for button to be released
+            wait(|| !button.pressed()).await;
         }
     };
 
     let async_newline_recv = async {
         loop {
             wait(|| IS_NEWLINE.load(Ordering::SeqCst)).await;
-            let mut serial = usart1_rx_tx.lock().await;
 
-            serial.write_str("Printing\r\n").unwrap();
-            while serial.size() != 0 {
-                let c = serial.try_read_character().unwrap();
-                serial.write_char(c).unwrap();
-            }
-            serial.write_str("\r\n").unwrap();
+            usart1_rx_tx.lock().await.action(|mut serial| {
+                serial.write_str("Printing\r\n").unwrap();
+                while serial.size() != 0 {
+                    let c = serial.try_read_character().unwrap();
+                    serial.write_char(c).unwrap();
+                }
+                serial.write_str("\r\n").unwrap();
+            });
+
             IS_NEWLINE.store(false, Ordering::SeqCst);
         }
     };
@@ -146,11 +151,12 @@ fn main() -> ! {
         loop {
             sleep_via_timer(Duration::from_millis(1000)).await;
             let current_time = get_current_time();
-            let mut serial = usart1_rx_tx.lock().await;
 
-            serial
-                .write_fmt(format_args!("Time: {:?}\r\n", current_time))
-                .unwrap();
+            usart1_rx_tx.lock().await.action(|mut serial| {
+                serial
+                    .write_fmt(format_args!("Time: {:?}\r\n", current_time))
+                    .unwrap();
+            });
         }
     };
 

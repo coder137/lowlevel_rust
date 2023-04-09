@@ -1,7 +1,4 @@
-use core::{
-    cell::{RefCell, RefMut},
-    ops::{Deref, DerefMut},
-};
+use core::cell::{RefCell, RefMut};
 
 use crate::wait_and_return;
 
@@ -16,7 +13,8 @@ impl<T> AsyncMutex<T> {
         }
     }
 
-    pub async fn lock(&self) -> AsyncMutexGuard<T> {
+    #[must_use]
+    pub async fn lock(&self) -> AsyncScopedMutex<T> {
         let data = wait_and_return(|| {
             let result = self.data.try_borrow_mut();
             match result {
@@ -25,23 +23,16 @@ impl<T> AsyncMutex<T> {
             }
         })
         .await;
-        AsyncMutexGuard { data }
+        AsyncScopedMutex { data }
     }
 }
 
-pub struct AsyncMutexGuard<'a, T> {
+pub struct AsyncScopedMutex<'a, T> {
     data: RefMut<'a, T>,
 }
 
-impl<'a, T> Deref for AsyncMutexGuard<'a, T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        self.data.deref()
-    }
-}
-
-impl<'a, T> DerefMut for AsyncMutexGuard<'a, T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.data.deref_mut()
+impl<'a, T> AsyncScopedMutex<'a, T> {
+    pub fn action(self, cb: impl Fn(RefMut<T>)) {
+        cb(self.data)
     }
 }
