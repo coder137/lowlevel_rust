@@ -75,3 +75,10 @@ jobs:
           cargo make ci_debug
           cargo make ci_release
           cargo doc
+      
+      - name: Minimal Async Basic
+        working-directory: ${{github.workspace}}/minimal_async_basic
+        run: |
+          cargo make ci_debug
+          cargo make ci_release
+          cargo doc

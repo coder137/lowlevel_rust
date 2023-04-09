@@ -1,0 +1,6 @@
+# Files
+*.map
+.vscode/.cortex-debug.*
+
+# Folders
+target
